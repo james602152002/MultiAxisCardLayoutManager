@@ -1,34 +1,45 @@
 package com.james602152002.multiaxiscardlayoutmanager;
 
 import android.graphics.Rect;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.BaseCardViewHolder;
+import com.james602152002.multiaxiscardlayoutmanager.viewholder.HorizontalCardViewHolder;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.VerticalCardViewHolder;
 
 /**
  * Created by shiki60215 on 18-1-31.
  */
 
-public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
+public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager implements View.OnTouchListener {
 
     private int mVerticalOffset;//竖直偏移量 每次换行时，要根据这个offset判断
-    private int mHorizontalOffset;
     private int mFirstVisiPos;//屏幕可见的第一个View的Position
     private int mLastVisiPos;//屏幕可见的最后一个View的Position
 
     private SparseArray<Rect> mItemRects;//key 是View的position，保存View的bounds 和 显示标志，
+    private SparseArray<Rect> horizontalCardItemRects;
+    private SparseArray<View> horizontalCards;
+    private SparseArray<Integer> horizontalCardHorizontalOffsets;
 
     private final RecyclerView recyclerView;
+    private float downX, downY;
+    private boolean moving_horizontal_cards = false;
 
-    public MultiAxisCardLayoutManager(RecyclerView recyclerView) {
+    public MultiAxisCardLayoutManager(@NonNull RecyclerView recyclerView) {
         setAutoMeasureEnabled(true);
         mItemRects = new SparseArray<>();
+        horizontalCardItemRects = new SparseArray<>();
+        horizontalCards = new SparseArray<>();
+        horizontalCardHorizontalOffsets = new SparseArray<>();
         this.recyclerView = recyclerView;
+        recyclerView.setOnTouchListener(this);
     }
 
     @Override
@@ -53,6 +64,13 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         mFirstVisiPos = 0;
         mLastVisiPos = getItemCount();
 
+        //重置child记录区域
+        mItemRects.clear();
+        horizontalCardItemRects.clear();
+        horizontalCards.clear();
+        horizontalCardHorizontalOffsets.clear();
+
+
         //初始化时调用 填充childView
         fill(recycler, state);
     }
@@ -64,7 +82,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
      * @param state
      */
     private void fill(RecyclerView.Recycler recycler, RecyclerView.State state) {
-        fill(recycler, state, 0);
+        fill(recycler, 0, 0);
     }
 
     /**
@@ -73,11 +91,10 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
      * 一般情况是返回dy，如果出现View数量不足，则返回修正后的dy.
      *
      * @param recycler
-     * @param state
-     * @param dy       RecyclerView给我们的位移量,+,显示底端， -，显示头部
-     * @return 修正以后真正的dy（可能剩余空间不够移动那么多了 所以return <|dy|）
+     * @param dx       Horizontal Card View偏移量
+     * @param dy       RecyclerView给我们的位移量,+,显示底端， -，显示头部  @return 修正以后真正的dy（可能剩余空间不够移动那么多了 所以return <|dy|）
      */
-    private int fill(RecyclerView.Recycler recycler, RecyclerView.State state, int dy) {
+    private int fill(RecyclerView.Recycler recycler, int dx, int dy) {
 
         int topOffset = getPaddingTop();
 
@@ -101,11 +118,9 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             }
             //detachAndScrapAttachedViews(recycler);
         }
-
 //        int leftOffset = getPaddingLeft();
         int lineMaxHeight = 0;
         int lineMaxWidth = 0;
-        int horizontal_card_top_off_set = 0;
         //布局子View阶段
         if (dy >= 0) {
             int minPos = mFirstVisiPos;
@@ -118,7 +133,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 lineMaxHeight = Math.max(lineMaxHeight, getDecoratedMeasurementVertical(lastView));
             }
             //顺序addChildView
-            int leftOffset = getPaddingLeft();
+            int leftOffset = getPaddingLeft() + dx;
             boolean first_horizontal_card = true;
             for (int i = minPos; i <= mLastVisiPos; i++) {
                 //找recycler要一个childItemView,我们不管它是从scrap里取，还是从RecyclerViewPool里取，亦或是onCreateViewHolder里拿。
@@ -132,7 +147,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     first_horizontal_card = true;
                     lineMaxWidth = 0;
                     topOffset += lineMaxHeight;
-                    leftOffset = getPaddingLeft();
+                    leftOffset = getPaddingLeft() + dx;
                     Log.i("", "vertical" + i);
                 } else {
                     if (first_horizontal_card) {
@@ -142,6 +157,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 
                     leftOffset += lineMaxWidth;
                     lineMaxWidth = Math.max(lineMaxWidth, getDecoratedMeasurementHorizontal(child));
+                    horizontalCards.put(i, child);
                     Log.i("", "horizontal" + i);
                 }
 
@@ -158,6 +174,9 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     //保存Rect供逆序layout用
                     Rect rect = new Rect(leftOffset, topOffset + mVerticalOffset, leftOffset + getDecoratedMeasurementHorizontal(child), topOffset + getDecoratedMeasurementVertical(child) + mVerticalOffset);
                     mItemRects.put(i, rect);
+                    if (viewHolder instanceof HorizontalCardViewHolder) {
+                        horizontalCardItemRects.put(i, rect);
+                    }
 
                     //改变 left  lineHeight
                     lineMaxHeight = Math.max(lineMaxHeight, getDecoratedMeasurementVertical(child));
@@ -240,7 +259,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             }
         }
 
-        realOffset = fill(recycler, state, realOffset);//先填充，再位移。
+        realOffset = fill(recycler, 0, realOffset);//先填充，再位移。
 
         mVerticalOffset += realOffset;//累加实际滑动距离
 
@@ -253,7 +272,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     public boolean canScrollHorizontally() {
         return true;
     }
-
 
 
     @Override
@@ -270,8 +288,14 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 //        } else if (realOffset > 0) {
 //
 //        }
-
-//        offsetChildrenHorizontal(-realOffset);
+        if (moving_horizontal_cards) {
+            fill(recycler, realOffset, 0);
+            for (int i = 0; i < horizontalCards.size(); i++) {
+                View child = horizontalCards.get(horizontalCards.keyAt(i));
+                child.setX(child.getX() - realOffset);
+            }
+//            offsetChildrenHorizontal(-realOffset);
+        }
 
         realOffset = 0;
         return realOffset;
@@ -311,5 +335,33 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 
     public int getHorizontalSpace() {
         return getWidth() - getPaddingLeft() - getPaddingRight();
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                downX = event.getX();
+                downY = event.getY();
+                moving_horizontal_cards = isTouchingHorizontalCard(downX, downY + mVerticalOffset);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                break;
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+                moving_horizontal_cards = false;
+                break;
+        }
+        return false;
+    }
+
+    private boolean isTouchingHorizontalCard(float x, float y) {
+        for (int i = 0; i < horizontalCardItemRects.size(); i++) {
+            Rect rect = horizontalCardItemRects.get(horizontalCardItemRects.keyAt(i));
+            if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                return true;
+            }
+        }
+        return false;
     }
 }
