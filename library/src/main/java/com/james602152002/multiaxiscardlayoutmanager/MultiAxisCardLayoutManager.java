@@ -173,28 +173,20 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                 } else {
                     //保存Rect供逆序layout用
                     Rect rect = new Rect();
+                    rect.left = leftOffset;
+                    rect.top = topOffset + mVerticalOffset;
+                    rect.right = leftOffset + getDecoratedMeasurementHorizontal(child);
+                    rect.bottom = topOffset + getDecoratedMeasurementVertical(child) + mVerticalOffset;
                     if (viewHolder instanceof HorizontalCardViewHolder) {
-                        rect.top = topOffset + mVerticalOffset;
-                        rect.bottom = topOffset + getDecoratedMeasurementVertical(child) + mVerticalOffset;
-
-                        if (horizontal_card_rect != null && rect.top <= horizontal_card_rect.top && rect.bottom >= horizontal_card_rect.bottom) {
-                            rect.left = leftOffset;
-                            rect.right = leftOffset + getDecoratedMeasurementHorizontal(child);
-                        } else {
-                            rect.left = leftOffset - dx;
-                            rect.right = leftOffset + getDecoratedMeasurementHorizontal(child) - dx;
-                        }
                         horizontalCardItemRects.put(i, rect);
-                    } else {
-                        rect.left = leftOffset;
-                        rect.top = topOffset + mVerticalOffset;
-                        rect.right = leftOffset + getDecoratedMeasurementHorizontal(child);
-                        rect.bottom = topOffset + getDecoratedMeasurementVertical(child) + mVerticalOffset;
                     }
                     mItemRects.put(i, rect);
                     //改变 left  lineHeight
                     lineMaxHeight = Math.max(lineMaxHeight, getDecoratedMeasurementVertical(child));
                     layoutDecoratedWithMargins(child, leftOffset, topOffset, leftOffset + getDecoratedMeasurementHorizontal(child), topOffset + getDecoratedMeasurementVertical(child));
+                    if (viewHolder instanceof HorizontalCardViewHolder) {
+                        child.setX(rect.left + getLeftDecorationWidth(child));
+                    }
                 }
             }
             //添加完后，判断是否已经没有更多的ItemView，并且此时屏幕仍有空白，则需要修正dy
@@ -230,13 +222,14 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                     View child = recycler.getViewForPosition(i);
                     RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(child);
 
-                    if (viewHolder instanceof HorizontalCardViewHolder)
-                        horizontalCards.put(i, child);
-
                     addView(child, 0);//将View添加至RecyclerView中，childIndex为1，但是View的位置还是由layout的位置决定
                     measureChildWithMargins(child, 0, 0);
 
                     layoutDecoratedWithMargins(child, rect.left, rect.top - mVerticalOffset, rect.right, rect.bottom - mVerticalOffset);
+                    if (viewHolder instanceof HorizontalCardViewHolder) {
+                        horizontalCards.put(i, child);
+                        child.setX(rect.left + getLeftDecorationWidth(child));
+                    }
                 }
             }
         }
@@ -323,6 +316,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
 //        } else if (realOffset > 0) {
 //
 //        }
+        int count = 0;
         if (touching_horizontal_cards && scrolling) {
             fill(recycler, realOffset, 0);
             for (int i = 0; i < horizontalCards.size(); i++) {
@@ -330,12 +324,16 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                 View child = horizontalCards.get(key_index);
                 Rect childRect = mItemRects.get(key_index);
                 if (horizontal_card_rect != null && childRect != null && childRect.top <= horizontal_card_rect.top && childRect.bottom >= horizontal_card_rect.bottom) {
-                    childRect.left = childRect.left- realOffset;
-                    child.setX(childRect.left);
+                    childRect.left = childRect.left - realOffset;
+                    childRect.right = childRect.right - realOffset;
+                    child.setX(childRect.left + getLeftDecorationWidth(child));
+                    count++;
                 }
             }
 //            offsetChildrenHorizontal(-realOffset);
+            Log.i("", "scroll_count ============= " + count);
         }
+
 
         realOffset = 0;
         return realOffset;
