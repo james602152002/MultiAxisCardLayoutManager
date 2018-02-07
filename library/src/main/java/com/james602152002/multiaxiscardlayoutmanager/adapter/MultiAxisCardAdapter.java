@@ -24,9 +24,11 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
     private final short TYPE_VERTICAL = 0;
     private final short TYPE_HORIZONTAL = 1;
     private final SparseArray<Boolean> horizontal_position_list = new SparseArray<>();
+    private final SparseArray<Boolean> first_horizontal_position_list = new SparseArray<>();
     private final int vertical_view_id;
     private final int horizontal_view_id;
     private final ViewHolderCallBack callBack;
+    private int count = 0;
 
     public MultiAxisCardAdapter(Context context, SparseArray<Object> items, int vertical_view_id, int horizontal_view_id, ViewHolderCallBack callBack) {
         inflater = LayoutInflater.from(context);
@@ -34,6 +36,24 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
         this.vertical_view_id = vertical_view_id;
         this.horizontal_view_id = horizontal_view_id;
         this.callBack = callBack;
+        if (items != null) {
+            int count = 0;
+            for (int i = 0; i < items.size(); i++) {
+                Object item = items.get(i);
+                if (item != null) {
+                    if (item instanceof List) {
+                        final int saved_count = count;
+                        count += ((List) items.get(i)).size();
+                        for (int position = saved_count; position < count; position++) {
+                            horizontal_position_list.put(position, true);
+                        }
+                    } else {
+                        count++;
+                    }
+                }
+            }
+            this.count = count;
+        }
     }
 
     @Override
@@ -62,26 +82,7 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
 
     @Override
     public int getItemCount() {
-        horizontal_position_list.clear();
-        if (items != null) {
-            int count = 0;
-            for (int i = 0; i < items.size(); i++) {
-                Object item = items.get(i);
-                if (item != null) {
-                    if (item instanceof List) {
-                        final int saved_count = count;
-                        count += ((List) items.get(i)).size();
-                        for (int position = saved_count; position < count; position++) {
-                            horizontal_position_list.put(position, true);
-                        }
-                    } else {
-                        count++;
-                    }
-                }
-            }
-            return count;
-        }
-        return 0;
+        return count;
     }
 
 
