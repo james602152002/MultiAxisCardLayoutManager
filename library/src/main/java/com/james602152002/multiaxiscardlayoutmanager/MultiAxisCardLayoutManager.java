@@ -163,11 +163,13 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                 if (holder instanceof HorizontalCardViewHolder) {
                     if (dx > 0) {
                         if (child.getX() + getDecoratedMeasuredWidth(child) - getLeftDecorationWidth(child) - dx < leftOffset) {
-                            removeAndRecycleView(child, recycler);
+//                            removeAndRecycleView(child, recycler);
+                            detachAndScrapView(child, recycler);
                         }
                     } else if (dx < 0) {
                         if (child.getX() - dx > getWidth() - getPaddingRight()) {
-                            removeAndRecycleView(child, recycler);
+//                            removeAndRecycleView(child, recycler);
+                            detachAndScrapView(child, recycler);
                         }
                     }
                 }
@@ -175,14 +177,17 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                 if (dy > 0) {//需要回收当前屏幕，上越界的View
                     if (getDecoratedBottom(child) + appBarVerticalOffset - dy < topOffset) {
                         removeOverBoundsHorizontalCards(holder, child);
-                        removeAndRecycleView(child, recycler);
+//                        removeAndRecycleView(child, recycler);
+                        detachAndScrapView(child, recycler);
+                        Log.i("", "child count ============= " + getChildCount());
                         mFirstVisiPos++;
                         continue;
                     }
                 } else if (dy < 0) {//回收当前屏幕，下越界的View
                     if (getDecoratedTop(child) + appBarVerticalOffset - dy > getHeight() - getPaddingBottom()) {
                         removeOverBoundsHorizontalCards(holder, child);
-                        removeAndRecycleView(child, recycler);
+//                        removeAndRecycleView(child, recycler);
+                        detachAndScrapView(child, recycler);
                         mLastVisiPos--;
                         continue;
                     }
@@ -201,12 +206,18 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
             int minPos = mFirstVisiPos;
             mLastVisiPos = getItemCount() - 1;
             if (getChildCount() > 0) {
+                Log.i("", "child count > 0");
                 View lastView = getChildAt(getChildCount() - 1);
-                minPos = getPosition(lastView) + 1;//从最后一个View+1开始吧
+                RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(lastView);
+                if (viewHolder instanceof HorizontalCardViewHolder)
+                    minPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextIndex(getPosition(lastView));
+                else
+                    minPos = getPosition(lastView) + 1;//从最后一个View+1开始吧
                 topOffset = getDecoratedTop(lastView);
 //                leftOffset = getDecoratedRight(lastView);
                 lineMaxHeight = Math.max(lineMaxHeight, getDecoratedMeasurementVertical(lastView));
             }
+            Log.i("", "min position ================ " + minPos);
             //顺序addChildView
             leftOffset = getPaddingLeft() + dx;
             for (int i = minPos; i <= mLastVisiPos; i++) {
@@ -245,7 +256,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                     // need to remove horizontal map size
                     removeAndRecycleView(child, recycler);
                     mLastVisiPos = i - 1;
-                    Log.i("", "remove i ================== " + i);
+//                    Log.i("", "remove i ================== " + i);
                 } else {
                     //保存Rect供逆序layout用
                     Rect rect = new Rect();
@@ -262,8 +273,9 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                     layoutDecoratedWithMargins(child, leftOffset, topOffset, rect.right, topOffset + getDecoratedMeasurementVertical(child));
                     if (viewHolder instanceof HorizontalCardViewHolder) {
                         child.setX(rect.left + getLeftDecorationWidth(child));
-                        Log.i("", "top ============== " + (topOffset - dy));
-                        Log.i("", "add i ================== " + i);
+//                        Log.i("", "minPosition ========== " + minPos);
+//                        Log.i("", "top ============== " + (topOffset - dy));
+//                        Log.i("", "add i ================== " + i);
                     }
                 }
             }
