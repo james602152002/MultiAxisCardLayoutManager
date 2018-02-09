@@ -24,7 +24,7 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
     private final short TYPE_VERTICAL = 0;
     private final short TYPE_HORIZONTAL = 1;
     private final SparseArray<Boolean> horizontal_position_list = new SparseArray<>();
-    private final SparseArray<Boolean> first_horizontal_position_list = new SparseArray<>();
+    private final SparseArray<Integer> first_horizontal_position_list = new SparseArray<>();
     private final int vertical_view_id;
     private final int horizontal_view_id;
     private final ViewHolderCallBack callBack;
@@ -38,11 +38,13 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
         this.callBack = callBack;
         if (items != null) {
             int count = 0;
+
             for (int i = 0; i < items.size(); i++) {
                 Object item = items.get(i);
                 if (item != null) {
                     if (item instanceof List) {
                         final int saved_count = count;
+                        first_horizontal_position_list.put(first_horizontal_position_list.size(), count);
                         count += ((List) items.get(i)).size();
                         for (int position = saved_count; position < count; position++) {
                             horizontal_position_list.put(position, true);
@@ -54,6 +56,10 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
             }
             this.count = count;
         }
+    }
+
+    public boolean isFirstHorizontalCard(int position) {
+        return first_horizontal_position_list.indexOfValue(position) != -1;
     }
 
     @Override

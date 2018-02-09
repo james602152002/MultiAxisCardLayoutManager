@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 
+import com.james602152002.multiaxiscardlayoutmanager.adapter.MultiAxisCardAdapter;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.HorizontalCardViewHolder;
 
 import java.lang.reflect.Field;
@@ -39,6 +40,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
     private Rect horizontal_card_rect;
     private AppBarLayout appBarLayout;
     private int appBarVerticalOffset;
+    private int appBarTotalScrollRange;
     private RecyclerView.Recycler recycler;
 
     public MultiAxisCardLayoutManager(@NonNull RecyclerView recyclerView) {
@@ -71,11 +73,14 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
 
                 @Override
                 public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-                    appBarVerticalOffset = appBarLayout.getTotalScrollRange() + verticalOffset;
-                    if (recycler != null && init)
+                    appBarTotalScrollRange = appBarLayout.getTotalScrollRange();
+                    appBarVerticalOffset = appBarTotalScrollRange + verticalOffset;
+                    if (recycler != null && init) {
                         fill(recycler, 0, savedVerticalOffset - verticalOffset);
+                    }
                     savedVerticalOffset = verticalOffset;
                     init = true;
+                    scrolling = true;
                 }
             });
         }
@@ -183,14 +188,16 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                     }
                 }
             }
-            Log.i("","lastVisiblePosition ============= " + mLastVisiPos);
-//            detachAndScrapAttachedViews(recycler);
         }
 
         int lineMaxHeight = 0;
         int lineMaxWidth = 0;
-        //布局子View阶段
+        //fix appbar layout vertical offset of dy
+        if (appBarVerticalOffset != 0)
+            dy = 0;
+        //layout child view
         if (dy >= 0) {
+//            Log.i("", "y > 0");
             int minPos = mFirstVisiPos;
             mLastVisiPos = getItemCount() - 1;
             if (getChildCount() > 0) {
@@ -202,7 +209,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
             }
             //顺序addChildView
             leftOffset = getPaddingLeft() + dx;
-            boolean first_horizontal_card = true;
             for (int i = minPos; i <= mLastVisiPos; i++) {
                 //找recycler要一个childItemView,我们不管它是从scrap里取，还是从RecyclerViewPool里取，亦或是onCreateViewHolder里拿。
                 View child = recycler.getViewForPosition(i);
@@ -211,28 +217,35 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
 
                 //改变top  left  lineHeight
                 if (viewHolder instanceof HorizontalCardViewHolder) {
-                    if (first_horizontal_card) {
+                    if (((MultiAxisCardAdapter) recyclerView.getAdapter()).isFirstHorizontalCard(i)) {
                         topOffset += lineMaxHeight;
-                        first_horizontal_card = false;
                     }
 
                     leftOffset += lineMaxWidth;
+//                    leftOffset = leftOffset + getPaddingLeft() + dx + lineMaxWidth;
                     lineMaxWidth = Math.max(lineMaxWidth, getDecoratedMeasurementHorizontal(child));
                     horizontalCards.put(i, child);
                 } else {
-                    first_horizontal_card = true;
                     lineMaxWidth = 0;
                     topOffset += lineMaxHeight;
                     leftOffset = getPaddingLeft() + dx;
                 }
 
                 lineMaxHeight = 0;
-
+//                if (i == 2) {
+//                    Log.i("", "topOffset ============= " + topOffset);
+//                    Log.i("", "measure ================ " + (topOffset - dy));
+//                    Log.i("", "limit ============ " + (getHeight() - getPaddingBottom() - appBarVerticalOffset));
+//                    Log.i("", "appBarVerticalOffset ==================== " + appBarVerticalOffset);
+//                }
                 //新起一行的时候要判断一下边界
-                if (topOffset - dy > getHeight() - getPaddingBottom()) {
+                if (topOffset - dy > getHeight() - getPaddingBottom() - appBarVerticalOffset) {
                     //越界了 就回收
+
+                    // need to remove horizontal map size
                     removeAndRecycleView(child, recycler);
                     mLastVisiPos = i - 1;
+                    Log.i("", "remove i ================== " + i);
                 } else {
                     //保存Rect供逆序layout用
                     Rect rect = new Rect();
@@ -249,6 +262,8 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                     layoutDecoratedWithMargins(child, leftOffset, topOffset, rect.right, topOffset + getDecoratedMeasurementVertical(child));
                     if (viewHolder instanceof HorizontalCardViewHolder) {
                         child.setX(rect.left + getLeftDecorationWidth(child));
+                        Log.i("", "top ============== " + (topOffset - dy));
+                        Log.i("", "add i ================== " + i);
                     }
                 }
             }
@@ -280,6 +295,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                     mFirstVisiPos = i + 1;
                     break;
                 } else {
+//                    Log.i("" ,"add i ================== " + i);
                     View child = recycler.getViewForPosition(i);
                     RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(child);
 
@@ -309,7 +325,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
 
     private void removeOverBoundsHorizontalCards(RecyclerView.ViewHolder holder, View child) {
         if (holder instanceof HorizontalCardViewHolder) {
-            Log.i("", "recycle_horizontal_card");
             int index = horizontalCards.indexOfValue(child);
             if (index >= 0) {
                 horizontalCards.removeAt(index);
@@ -350,10 +365,11 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
         }
 
         if (!sliding_horizontal_cards) {
-            realOffset = fill(recycler, 0, realOffset);//先填充，再位移。
-
+            //If you have AppBarLayout, you need terminate fill method when AppBarLayout height is changing.
+            if (appBarLayout == null || mVerticalOffset + realOffset > 0) {
+                realOffset = fill(recycler, 0, realOffset);//先填充，再位移。}
+            }
             mVerticalOffset += realOffset;//累加实际滑动距离
-
             offsetChildrenVertical(-realOffset);//滑动
         }
         scrolling = true;
