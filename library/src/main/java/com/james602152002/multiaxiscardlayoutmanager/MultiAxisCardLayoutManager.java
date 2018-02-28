@@ -6,7 +6,6 @@ import android.support.design.widget.AppBarLayout;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,15 +32,15 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
     private SparseArray<View> horizontalCards;
 
     private final RecyclerView recyclerView;
-    private float downX, downY;
+    private float downX, downY, moveX;
     private boolean touching_horizontal_cards = false;
     private boolean sliding_horizontal_cards = false;
-    private boolean scrolling = false;
     private final short touchSlop;
     private Rect horizontal_card_rect;
     private AppBarLayout appBarLayout;
     private int appBarVerticalOffset;
     private int appBarTotalScrollRange;
+    private short appBarMaximumHeight;
     private RecyclerView.Recycler recycler;
 
     public MultiAxisCardLayoutManager(@NonNull RecyclerView recyclerView) {
@@ -74,6 +73,8 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
 
                 @Override
                 public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                    if (appBarMaximumHeight == 0)
+                        appBarMaximumHeight = (short) appBarLayout.getHeight();
                     appBarTotalScrollRange = appBarLayout.getTotalScrollRange();
                     appBarVerticalOffset = appBarTotalScrollRange + verticalOffset;
                     if (recycler != null && init) {
@@ -81,9 +82,21 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                     }
                     savedVerticalOffset = verticalOffset;
                     init = true;
-                    scrolling = true;
                 }
             });
+
+//            CoordinatorLayout coordinatorLayout = (CoordinatorLayout) recyclerView.getParent();
+//            coordinatorLayout.set
+//            CoordinatorLayout.LayoutParams layoutParams = (CoordinatorLayout.LayoutParams) appBarLayout.getLayoutParams();
+//            AppBarLayout.Behavior appBarLayoutBehaviour = new AppBarLayout.Behavior();
+//            appBarLayoutBehaviour.setDragCallback(new AppBarLayout.Behavior.DragCallback() {
+//                @Override
+//                public boolean canDrag(@NonNull AppBarLayout appBarLayout) {
+//                    return false;
+//                }
+//            });
+//            layoutParams.setBehavior(appBarLayoutBehaviour);
+//            recyclerView.setNestedScrollingEnabled(false);
         }
     }
 
@@ -376,29 +389,53 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
             mVerticalOffset += realOffset;//累加实际滑动距离
             offsetChildrenVertical(-realOffset);//滑动
         }
-        scrolling = true;
         return realOffset;
     }
 
     @Override
     public boolean canScrollHorizontally() {
-        return true;
+        return false;
     }
 
 
-    @Override
-    public int scrollHorizontallyBy(int dx, RecyclerView.Recycler recycler, RecyclerView.State state) {
-        if (dx == 0 || getChildCount() == 0) {
-            return 0;
+//    @Override
+//    public int scrollHorizontallyBy(int dx, RecyclerView.Recycler recycler, RecyclerView.State state) {
+//        if (dx == 0 || getChildCount() == 0) {
+//            return 0;
+//        }
+//        int realOffset = dx;
+//
+////        if (mHorizontalOffset + realOffset < 0) {
+////            realOffset = -mHorizontalOffset;
+////        } else if (realOffset > 0) {
+////
+////        }
+//        if (touching_horizontal_cards && scrolling) {
+//            fill(recycler, realOffset, 0);
+//            for (int i = 0; i < horizontalCards.size(); i++) {
+//                final int key_index = horizontalCards.keyAt(i);
+//                View child = horizontalCards.get(key_index);
+//                Rect childRect = horizontalCardItemRects.get(key_index);
+//                if (horizontal_card_rect != null && childRect != null && childRect.top <= horizontal_card_rect.top && childRect.bottom >= horizontal_card_rect.bottom) {
+//                    childRect.left = childRect.left - realOffset;
+//                    childRect.right = childRect.right - realOffset;
+//                    child.setX(childRect.left + getLeftDecorationWidth(child));
+//                }
+//            }
+//        }
+//
+//
+//        realOffset = 0;
+//        return realOffset;
+//    }
+
+    public void scrollHorizontalBy(int dx) {
+        if (recycler != null && (dx == 0 || getChildCount() == 0)) {
+            return;
         }
         int realOffset = dx;
 
-//        if (mHorizontalOffset + realOffset < 0) {
-//            realOffset = -mHorizontalOffset;
-//        } else if (realOffset > 0) {
-//
-//        }
-        if (touching_horizontal_cards && scrolling) {
+        if (touching_horizontal_cards) {
             fill(recycler, realOffset, 0);
             for (int i = 0; i < horizontalCards.size(); i++) {
                 final int key_index = horizontalCards.keyAt(i);
@@ -411,10 +448,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                 }
             }
         }
-
-
-        realOffset = 0;
-        return realOffset;
     }
 
     //模仿LLM Horizontal 源码
@@ -458,28 +491,30 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 sliding_horizontal_cards = false;
-                scrolling = false;
                 downX = event.getX();
+                moveX = event.getX();
                 downY = event.getY();
                 touching_horizontal_cards = isTouchingHorizontalCard(downX, downY + mVerticalOffset);
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (!scrolling && touching_horizontal_cards && !sliding_horizontal_cards) {
-                    Log.i("", "touching_horizontal_cards ------ " + (Math.abs(event.getX() - downX)));
+                if (touching_horizontal_cards && !sliding_horizontal_cards) {
                     if (Math.abs(event.getX() - downX) > touchSlop) {
                         sliding_horizontal_cards = true;
                     }
                 }
                 if (sliding_horizontal_cards) {
-                    Log.i("", "disable nested scrolling !!!!!!!!!!!!");
-                    ViewCompat.setNestedScrollingEnabled(recyclerView, false);
+                    scrollHorizontalBy((int) (moveX - event.getX()));
+                    recyclerView.invalidate();
+                    moveX = event.getX();
+                    recyclerView.setNestedScrollingEnabled(false);
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 touching_horizontal_cards = false;
                 horizontal_card_rect = null;
-                ViewCompat.setNestedScrollingEnabled(recyclerView, true);
+                recyclerView.setNestedScrollingEnabled(true);
+                ViewCompat.setNestedScrollingEnabled(appBarLayout, true);
                 break;
         }
         return false;
