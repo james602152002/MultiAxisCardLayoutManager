@@ -11,6 +11,7 @@ import com.james602152002.multiaxiscardlayoutmanager.viewholder.BaseCardViewHold
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.HorizontalCardViewHolder;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.VerticalCardViewHolder;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -24,7 +25,8 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
     private final short TYPE_VERTICAL = 0;
     private final short TYPE_HORIZONTAL = 1;
     private final SparseArray<Boolean> horizontal_position_list = new SparseArray<>();
-    private final SparseArray<Integer> first_horizontal_position_list = new SparseArray<>();
+    //If you wanna find value of index by sparse array, it will have bug. Because comparison logic use == not equal.
+    private final HashMap<Integer, Integer> first_horizontal_position_list = new HashMap<>();
     private final SparseArray<Integer> horizontal_cards_next_index = new SparseArray<>();
     private final int vertical_view_id;
     private final int horizontal_view_id;
@@ -61,7 +63,7 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
     }
 
     public boolean isFirstHorizontalCard(int position) {
-        return first_horizontal_position_list.indexOfValue(position) != -1;
+        return first_horizontal_position_list.containsValue(position);
     }
 
     public int getHorizontalCardNextIndex(int position) {
