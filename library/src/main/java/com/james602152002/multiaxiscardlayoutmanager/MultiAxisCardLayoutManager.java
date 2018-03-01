@@ -222,7 +222,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                 View lastView = getChildAt(getChildCount() - 1);
                 RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(lastView);
                 if (viewHolder instanceof HorizontalCardViewHolder)
-                    minPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextIndex(getPosition(lastView));
+                    minPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(getPosition(lastView));
                 else
                     minPos = getPosition(lastView) + 1;//从最后一个View+1开始吧
                 topOffset = getDecoratedTop(lastView);

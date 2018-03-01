@@ -27,7 +27,8 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
     private final SparseArray<Boolean> horizontal_position_list = new SparseArray<>();
     //If you wanna find value of index by sparse array, it will have bug. Because comparison logic use == not equal.
     private final HashMap<Integer, Integer> first_horizontal_position_list = new HashMap<>();
-    private final SparseArray<Integer> horizontal_cards_next_index = new SparseArray<>();
+    private final SparseArray<Integer> horizontal_cards_next_vertical_index = new SparseArray<>();
+    private final SparseArray<Integer> horizontal_leftmost_card_index = new SparseArray<>();
     private final int vertical_view_id;
     private final int horizontal_view_id;
     private final ViewHolderCallBack callBack;
@@ -51,7 +52,8 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
                         count += ((List) items.get(i)).size();
                         for (int position = saved_count; position < count; position++) {
                             horizontal_position_list.put(position, true);
-                            horizontal_cards_next_index.put(position, count);
+                            horizontal_cards_next_vertical_index.put(position, count);
+                            horizontal_leftmost_card_index.put(position, saved_count);
                         }
                     } else {
                         count++;
@@ -66,8 +68,15 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
         return first_horizontal_position_list.containsValue(position);
     }
 
-    public int getHorizontalCardNextIndex(int position) {
-        return horizontal_cards_next_index.get(position);
+    public int getHorizontalCardNextVerticalIndex(int position) {
+        return horizontal_cards_next_vertical_index.get(position);
+    }
+
+    public int[] getHorizontalCardsLeftmostRightMostBounds(int position) {
+        int[] bounds = new int[2];
+        bounds[0] = horizontal_leftmost_card_index.get(position);
+        bounds[1] = horizontal_cards_next_vertical_index.get(position) - 1;
+        return bounds;
     }
 
     @Override
