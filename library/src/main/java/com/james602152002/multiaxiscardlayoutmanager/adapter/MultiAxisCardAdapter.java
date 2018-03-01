@@ -6,7 +6,6 @@ import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
-import com.james602152002.multiaxiscardlayoutmanager.interfaces.ViewHolderCallBack;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.BaseCardViewHolder;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.HorizontalCardViewHolder;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.VerticalCardViewHolder;
@@ -20,26 +19,24 @@ import java.util.List;
 
 public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolder> {
 
-    private final LayoutInflater inflater;
+    protected final LayoutInflater inflater;
     private SparseArray<Object> items;
-    private final short TYPE_VERTICAL = 0;
-    private final short TYPE_HORIZONTAL = 1;
+    protected final short TYPE_VERTICAL = 0;
+    protected final short TYPE_HORIZONTAL = 1;
     private final SparseArray<Boolean> horizontal_position_list = new SparseArray<>();
     //If you wanna find value of index by sparse array, it will have bug. Because comparison logic use == not equal.
     private final HashMap<Integer, Integer> first_horizontal_position_list = new HashMap<>();
     private final SparseArray<Integer> horizontal_cards_next_vertical_index = new SparseArray<>();
     private final SparseArray<Integer> horizontal_leftmost_card_index = new SparseArray<>();
-    private final int vertical_view_id;
-    private final int horizontal_view_id;
-    private final ViewHolderCallBack callBack;
+    protected final int vertical_view_id;
+    protected final int horizontal_view_id;
     private int count = 0;
 
-    public MultiAxisCardAdapter(Context context, SparseArray<Object> items, int vertical_view_id, int horizontal_view_id, ViewHolderCallBack callBack) {
+    public MultiAxisCardAdapter(Context context, SparseArray<Object> items, int vertical_view_id, int horizontal_view_id) {
         inflater = LayoutInflater.from(context);
         this.items = items;
         this.vertical_view_id = vertical_view_id;
         this.horizontal_view_id = horizontal_view_id;
-        this.callBack = callBack;
         if (items != null) {
             int count = 0;
 
@@ -83,9 +80,9 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
     public BaseCardViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType) {
             case TYPE_VERTICAL:
-                return new VerticalCardViewHolder(inflater.inflate(vertical_view_id, parent, false), callBack);
+                return new VerticalCardViewHolder(inflater.inflate(vertical_view_id, parent, false));
             case TYPE_HORIZONTAL:
-                return new HorizontalCardViewHolder(inflater.inflate(horizontal_view_id, parent, false), callBack);
+                return new HorizontalCardViewHolder(inflater.inflate(horizontal_view_id, parent, false));
         }
         return null;
     }
