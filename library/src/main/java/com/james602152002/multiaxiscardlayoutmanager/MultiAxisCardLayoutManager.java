@@ -31,9 +31,10 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
     private SparseArray<View> horizontalCards;
 
     private final RecyclerView recyclerView;
-    private float downX, downY, moveX;
+    private float downX, downY, moveX, appbar_saved_offset;
     private boolean touching_horizontal_cards = false;
     private boolean sliding_horizontal_cards = false;
+    private boolean scroll_vertical;
     private final short touchSlop;
     private AppBarLayout appBarLayout;
     private int appBarVerticalOffset;
@@ -448,20 +449,22 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 sliding_horizontal_cards = false;
+                scroll_vertical = false;
                 downX = event.getX();
                 moveX = event.getX();
                 downY = event.getY();
+                appbar_saved_offset = appBarVerticalOffset;
                 touching_horizontal_cards = isTouchingHorizontalCard(downX, downY + mVerticalOffset);
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (touching_horizontal_cards && !sliding_horizontal_cards) {
-                    if (Math.abs(event.getX() - downX) > touchSlop) {
-                        sliding_horizontal_cards = true;
-                    }
+                if (!sliding_horizontal_cards && Math.abs(event.getY() - downY + appbar_saved_offset - appBarVerticalOffset) > touchSlop) {
+                    scroll_vertical = true;
+                }
+                if (touching_horizontal_cards && !sliding_horizontal_cards && !scroll_vertical && Math.abs(event.getX() - downX) > touchSlop) {
+                    sliding_horizontal_cards = true;
                 }
                 if (sliding_horizontal_cards) {
                     scrollHorizontalBy((int) (moveX - event.getX()));
-//                    recyclerView.invalidate();
                     moveX = event.getX();
                     recyclerView.setNestedScrollingEnabled(false);
                 }
