@@ -22,6 +22,6 @@ public class HorizontalCardViewHolder extends BaseCardViewHolder {
     }
 
     @Override
-    public void initView(int position) {
+    public void initView(int v_card_position, int h_card_position) {
     }
 }

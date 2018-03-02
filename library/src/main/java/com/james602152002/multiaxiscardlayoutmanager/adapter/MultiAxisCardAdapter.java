@@ -89,7 +89,7 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
 
     @Override
     public void onBindViewHolder(BaseCardViewHolder holder, int position) {
-        holder.initView(position);
+        holder.initView(position, position);
     }
 
     @Override

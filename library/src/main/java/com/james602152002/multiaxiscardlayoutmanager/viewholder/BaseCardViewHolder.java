@@ -12,5 +12,5 @@ public abstract  class BaseCardViewHolder extends RecyclerView.ViewHolder {
         super(itemView);
     }
 
-    public abstract void initView(int position);
+    public abstract void initView(int v_card_position, int h_card_position);
 }
