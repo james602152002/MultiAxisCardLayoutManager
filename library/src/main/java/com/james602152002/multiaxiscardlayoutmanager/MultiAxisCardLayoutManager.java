@@ -283,12 +283,11 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                     addView(child, 0);
                     measureChildWithMargins(child, 0, 0);
 
+                    layoutDecoratedWithMargins(child, rect.left, rect.top - mVerticalOffset, rect.right, rect.bottom - mVerticalOffset);
                     if (viewHolder instanceof HorizontalCardViewHolder) {
                         horizontalCards.put(i, child);
                         child.setX(rect.left + getLeftDecorationWidth(child));
                     }
-
-                    layoutDecoratedWithMargins(child, rect.left, rect.top - mVerticalOffset, rect.right, rect.bottom - mVerticalOffset);
                 }
             }
         }
