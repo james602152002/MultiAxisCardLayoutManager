@@ -20,7 +20,7 @@ import java.util.List;
 public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolder> {
 
     protected final LayoutInflater inflater;
-    private SparseArray<Object> items;
+    protected SparseArray<Object> items;
     protected final short TYPE_VERTICAL = 0;
     protected final short TYPE_HORIZONTAL = 1;
     private final SparseArray<Boolean> horizontal_position_list = new SparseArray<>();
@@ -89,7 +89,33 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
 
     @Override
     public void onBindViewHolder(BaseCardViewHolder holder, int position) {
-        holder.initView(position, position);
+        int v_position;
+        int h_position = 0;
+        int count = 0;
+        boolean need_break = false;
+        for (v_position = 0; v_position < items.size(); v_position++) {
+            if (items.get(v_position) instanceof List) {
+                h_position = 0;
+                List list = (List) items.get(v_position);
+                for (int j = 0; j < list.size(); j++) {
+                    if (count == position) {
+                        need_break = true;
+                        break;
+                    }
+                    h_position++;
+                    count++;
+                }
+                if (need_break)
+                    break;
+            } else {
+                if (count == position) {
+                    break;
+                }
+                h_position = 0;
+                count++;
+            }
+        }
+        holder.initView(v_position, h_position);
     }
 
     @Override
