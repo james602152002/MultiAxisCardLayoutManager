@@ -6,12 +6,11 @@ import android.support.design.widget.AppBarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 
 import com.james602152002.multiaxiscardlayoutmanager.adapter.MultiAxisCardAdapter;
+import com.james602152002.multiaxiscardlayoutmanager.ui.CardRecyclerView;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.HorizontalCardViewHolder;
 
 import java.lang.reflect.Field;
@@ -20,7 +19,7 @@ import java.lang.reflect.Field;
  * Created by shiki60215 on 18-1-31.
  */
 
-public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager implements View.OnTouchListener {
+public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 
     private int mVerticalOffset;//竖直偏移量 每次换行时，要根据这个offset判断
     private int mFirstVisiPos;//屏幕可见的第一个View的Position
@@ -30,12 +29,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
     private SparseArray<Rect> horizontalCardItemRects;
     private SparseArray<View> horizontalCards;
 
-    private final RecyclerView recyclerView;
-    private float downX, downY, moveX, appbar_saved_offset;
-    private boolean touching_horizontal_cards = false;
-    private boolean sliding_horizontal_cards = false;
-    private boolean scroll_vertical;
-    private final short touchSlop;
+    private final CardRecyclerView recyclerView;
     private AppBarLayout appBarLayout;
     private int appBarVerticalOffset;
     private int appBarTotalScrollRange;
@@ -43,14 +37,17 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
     private RecyclerView.Recycler recycler;
     private int[] horizontal_cards_scroll_bounds;
 
-    public MultiAxisCardLayoutManager(@NonNull RecyclerView recyclerView) {
+    public MultiAxisCardLayoutManager(@NonNull CardRecyclerView recyclerView) {
         setAutoMeasureEnabled(true);
         mItemRects = new SparseArray<>();
         horizontalCardItemRects = new SparseArray<>();
         horizontalCards = new SparseArray<>();
         this.recyclerView = recyclerView;
-        recyclerView.setOnTouchListener(this);
-        touchSlop = (short) ViewConfiguration.get(recyclerView.getContext()).getScaledTouchSlop();
+    }
+
+    @Override
+    public void onAttachedToWindow(RecyclerView view) {
+        super.onAttachedToWindow(view);
         findAppBarLayout();
     }
 
@@ -60,10 +57,11 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
             findAppBarLayout(parent);
         if (appBarLayout != null) {
             try {
-                Field field = RecyclerView.class.getDeclaredField("mRecycler");
+                Field field = CardRecyclerView.class.getSuperclass().getDeclaredField("mRecycler");
                 field.setAccessible(true);
                 recycler = (RecyclerView.Recycler) field.get(recyclerView);
             } catch (Exception e) {
+
             }
 
             appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
@@ -296,7 +294,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
         //when dy is equal to zero that means it probably in horizontal slide mode
         if (dy == 0) {
             //scrolling horizontal cards
-            if (sliding_horizontal_cards) {
+            if (recyclerView.isSliding_horizontal_cards()) {
                 if (horizontal_cards_scroll_bounds != null) {
                     for (int position = horizontal_cards_scroll_bounds[0]; position < horizontal_cards_scroll_bounds[1]; position++) {
                         View child = horizontalCards.get(position);
@@ -349,7 +347,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
             }
         }
 
-        if (!sliding_horizontal_cards) {
+        if (!recyclerView.isSliding_horizontal_cards()) {
             //If you have AppBarLayout, you need terminate fill method when AppBarLayout height is changing.
             if (appBarLayout == null || mVerticalOffset + realOffset > 0) {
                 realOffset = fill(recycler, 0, realOffset);//先填充，再位移。}
@@ -366,44 +364,13 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
     }
 
 
-//    @Override
-//    public int scrollHorizontallyBy(int dx, RecyclerView.Recycler recycler, RecyclerView.State state) {
-//        if (dx == 0 || getChildCount() == 0) {
-//            return 0;
-//        }
-//        int realOffset = dx;
-//
-////        if (mHorizontalOffset + realOffset < 0) {
-////            realOffset = -mHorizontalOffset;
-////        } else if (realOffset > 0) {
-////
-////        }
-//        if (touching_horizontal_cards && scrolling) {
-//            fill(recycler, realOffset, 0);
-//            for (int i = 0; i < horizontalCards.size(); i++) {
-//                final int key_index = horizontalCards.keyAt(i);
-//                View child = horizontalCards.get(key_index);
-//                Rect childRect = horizontalCardItemRects.get(key_index);
-//                if (horizontal_card_rect != null && childRect != null && childRect.top <= horizontal_card_rect.top && childRect.bottom >= horizontal_card_rect.bottom) {
-//                    childRect.left = childRect.left - realOffset;
-//                    childRect.right = childRect.right - realOffset;
-//                    child.setX(childRect.left + getLeftDecorationWidth(child));
-//                }
-//            }
-//        }
-//
-//
-//        realOffset = 0;
-//        return realOffset;
-//    }
-
     public void scrollHorizontalBy(int dx) {
         if (recycler != null && (dx == 0 || getChildCount() == 0)) {
             return;
         }
         int realOffset = dx;
 
-        if (touching_horizontal_cards) {
+        if (recyclerView.isTouching_horizontal_cards()) {
             fill(recycler, realOffset, 0);
         }
     }
@@ -436,49 +403,8 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
                 + params.bottomMargin;
     }
 
-    public int getVerticalSpace() {
-        return getHeight() - getPaddingTop() - getPaddingBottom();
-    }
-
-    public int getHorizontalSpace() {
-        return getWidth() - getPaddingLeft() - getPaddingRight();
-    }
-
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                sliding_horizontal_cards = false;
-                scroll_vertical = false;
-                downX = event.getX();
-                moveX = event.getX();
-                downY = event.getY();
-                appbar_saved_offset = appBarVerticalOffset;
-                touching_horizontal_cards = isTouchingHorizontalCard(downX, downY + mVerticalOffset);
-                break;
-            case MotionEvent.ACTION_MOVE:
-                if (!sliding_horizontal_cards && Math.abs(event.getY() - downY + appbar_saved_offset - appBarVerticalOffset) > touchSlop) {
-                    scroll_vertical = true;
-                }
-                if (touching_horizontal_cards && !sliding_horizontal_cards && !scroll_vertical && Math.abs(event.getX() - downX) > touchSlop) {
-                    sliding_horizontal_cards = true;
-                }
-                if (sliding_horizontal_cards) {
-                    scrollHorizontalBy((int) (moveX - event.getX()));
-                    moveX = event.getX();
-                    recyclerView.setNestedScrollingEnabled(false);
-                }
-                break;
-            case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP:
-                touching_horizontal_cards = false;
-                recyclerView.setNestedScrollingEnabled(true);
-                break;
-        }
-        return false;
-    }
-
-    private boolean isTouchingHorizontalCard(float x, float y) {
+    public boolean isTouchingHorizontalCard(float x, float y) {
+        y = y + mVerticalOffset;
         for (int i = 0; i < horizontalCardItemRects.size(); i++) {
             int position = horizontalCardItemRects.keyAt(i);
             Rect rect = horizontalCardItemRects.get(position);
@@ -488,5 +414,9 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager imple
             }
         }
         return false;
+    }
+
+    public int getAppBarVerticalOffset() {
+        return appBarVerticalOffset;
     }
 }
