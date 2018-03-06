@@ -79,6 +79,19 @@ public class CardRecyclerView extends RecyclerView {
         return super.dispatchTouchEvent(event);
     }
 
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent e) {
+        switch (e.getAction()) {
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_MOVE:
+                if (sliding_horizontal_cards) {
+                    return true;
+                }
+                break;
+        }
+        return super.onInterceptTouchEvent(e);
+    }
+
     public boolean isTouching_horizontal_cards() {
         return touching_horizontal_cards;
     }

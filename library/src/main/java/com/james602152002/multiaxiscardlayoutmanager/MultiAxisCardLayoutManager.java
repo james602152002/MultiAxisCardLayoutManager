@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +37,9 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     private short appBarMaximumHeight;
     private RecyclerView.Recycler recycler;
     private int[] horizontal_cards_scroll_bounds;
+    private MultiAxisCardAdapter mAdapter;
+    private boolean init = false;
+    private short layout_times = 0;
 
     public MultiAxisCardLayoutManager(@NonNull CardRecyclerView recyclerView) {
         setAutoMeasureEnabled(true);
@@ -105,7 +109,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     }
 
     @Override
-    public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+    public void onLayoutChildren(final RecyclerView.Recycler recycler, RecyclerView.State state) {
         if (getItemCount() == 0) {//没有Item，界面空着吧
             detachAndScrapAttachedViews(recycler);
             return;
@@ -113,21 +117,39 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         if (getChildCount() == 0 && state.isPreLayout()) {//state.isPreLayout()是支持动画的
             return;
         }
+
+        if (!init) {
+            removeAndRecycleAllViews(recycler);
+            if (layout_times > 0)
+                init = true;
+            layout_times++;
+        }
         //onLayoutChildren方法在RecyclerView 初始化时 会执行两遍
 //        detachAndScrapAttachedViews(recycler);
-        removeAndRecycleAllViews(recycler);
+        if (mAdapter == null) {
+            mAdapter = (MultiAxisCardAdapter) recyclerView.getAdapter();
+            if (mAdapter != null)
+                mAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+                    @Override
+                    public void onChanged() {
+                        super.onChanged();
+                        if (recycler != null)
+                            removeAndRecycleAllViews(recycler);
+                        //初始化区域
+                        mVerticalOffset = 0;
+                        mFirstVisiPos = 0;
+                        mLastVisiPos = getItemCount();
 
-        //初始化区域
-        mVerticalOffset = 0;
-        mFirstVisiPos = 0;
-        mLastVisiPos = getItemCount();
-
-        //重置child记录区域
-        mItemRects.clear();
+                        //重置child记录区域
+                        mItemRects.clear();
 //        horizontalCardItemRects.clear();
-        horizontalCards.clear();
+                        horizontalCards.clear();
+                        Log.i("", "data changed !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");
+                    }
+                });
+        }
 
-
+        Log.i("", "layout changed !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");
         //初始化时调用 填充childView
         fill(recycler, state);
     }
