@@ -2,6 +2,7 @@ package com.james602152002.multiaxiscardlayoutmanager.ui;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -67,13 +68,13 @@ public class CardRecyclerView extends RecyclerView {
                 if (sliding_horizontal_cards) {
                     layoutManager.scrollHorizontalBy((int) (moveX - event.getX()));
                     moveX = event.getX();
-                    setNestedScrollingEnabled(false);
+                    ViewCompat.setNestedScrollingEnabled(this, false);
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 touching_horizontal_cards = false;
-                setNestedScrollingEnabled(true);
+                ViewCompat.setNestedScrollingEnabled(this, true);
                 break;
         }
         return super.dispatchTouchEvent(event);
