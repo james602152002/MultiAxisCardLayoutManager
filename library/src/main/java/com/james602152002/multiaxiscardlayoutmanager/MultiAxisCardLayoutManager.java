@@ -222,6 +222,8 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             for (int i = minPos; i <= mLastVisiPos; i++) {
                 //找recycler要一个childItemView,我们不管它是从scrap里取，还是从RecyclerViewPool里取，亦或是onCreateViewHolder里拿。
                 View child = recycler.getViewForPosition(i);
+                //you need add child first to measure child
+                addAndMeasureChild(child);
                 //layout child when view is in visible position
                 RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(child);
 
@@ -244,9 +246,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     topOffset += lineMaxHeight;
                     leftOffset = getPaddingLeft() + dx;
                 }
-
-                //you need add child first to measure child
-                addAndMeasureChild(child);
 
                 lineMaxHeight = 0;
                 //新起一行的时候要判断一下边界
