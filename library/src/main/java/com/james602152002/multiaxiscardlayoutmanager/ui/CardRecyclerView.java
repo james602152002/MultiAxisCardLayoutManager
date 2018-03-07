@@ -99,4 +99,6 @@ public class CardRecyclerView extends RecyclerView {
     public boolean isSliding_horizontal_cards() {
         return sliding_horizontal_cards;
     }
+
+
 }

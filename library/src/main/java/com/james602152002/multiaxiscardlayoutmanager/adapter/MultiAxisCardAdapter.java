@@ -131,4 +131,33 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
         return count;
     }
 
+    public void reset() {
+        count = 0;
+        horizontal_position_list.clear();
+        first_horizontal_position_list.clear();
+        horizontal_cards_next_vertical_index.clear();
+        horizontal_leftmost_card_index.clear();
+        if (items != null) {
+            int count = 0;
+            for (int i = 0; i < items.size(); i++) {
+                Object item = items.get(i);
+                if (item != null) {
+                    if (item instanceof List) {
+                        final int saved_count = count;
+                        first_horizontal_position_list.put(first_horizontal_position_list.size(), count);
+                        count += ((List) items.get(i)).size();
+                        for (int position = saved_count; position < count; position++) {
+                            horizontal_position_list.put(position, true);
+                            horizontal_cards_next_vertical_index.put(position, count);
+                            horizontal_leftmost_card_index.put(position, saved_count);
+                        }
+                    } else {
+                        count++;
+                    }
+                }
+            }
+            this.count = count;
+        }
+    }
+
 }
