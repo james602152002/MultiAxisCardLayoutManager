@@ -72,7 +72,7 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
     public int[] getHorizontalCardsLeftmostRightMostBounds(int position) {
         int[] bounds = new int[2];
         bounds[0] = horizontal_leftmost_card_index.get(position);
-        bounds[1] = horizontal_cards_next_vertical_index.get(position);
+        bounds[1] = horizontal_cards_next_vertical_index.get(position) - 1;
         return bounds;
     }
 

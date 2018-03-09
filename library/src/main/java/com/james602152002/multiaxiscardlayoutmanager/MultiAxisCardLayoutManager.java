@@ -345,7 +345,17 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             //scrolling horizontal cards
             if (recyclerView.isSliding_horizontal_cards()) {
                 if (horizontal_cards_scroll_bounds != null) {
-                    for (int position = horizontal_cards_scroll_bounds[0]; position < horizontal_cards_scroll_bounds[1]; position++) {
+                    //first and last horizontal cards are not allow scroll over layout padding.
+                    final int first_child_position = horizontal_cards_scroll_bounds[0];
+                    Rect first_child_rect = horizontalCardItemRects.get(first_child_position);
+                    final int last_child_position = horizontal_cards_scroll_bounds[1];
+                    Rect last_child_rect = horizontalCardItemRects.get(last_child_position);
+                    if (first_child_rect.left - dx > getPaddingLeft()) {
+                        dx = first_child_rect.left - getPaddingLeft();
+                    } else if (last_child_rect.right - dx < getWidth() + getPaddingRight()) {
+                        dx = last_child_rect.right - getWidth() - getPaddingRight();
+                    }
+                    for (int position = first_child_position; position <= last_child_position; position++) {
                         View child = horizontalCards.get(position);
                         Rect childRect = horizontalCardItemRects.get(position);
                         childRect.left = childRect.left - dx;
