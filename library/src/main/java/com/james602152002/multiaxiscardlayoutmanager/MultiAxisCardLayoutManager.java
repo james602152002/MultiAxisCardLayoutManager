@@ -236,12 +236,14 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 if (dy > 0) {//Recycle top child out of bounds.
                     if (getDecoratedBottom(child) + appBarVerticalOffset - dy < topOffset) {
                         detachAndScrapView(child, recycler);
+                        removeAndRecycleView(child, recycler);
                         mFirstVisiPos++;
                         continue;
                     }
                 } else if (dy < 0) {//Recycle bottom child out of bounds.
                     if (getDecoratedTop(child) + appBarVerticalOffset - dy > getHeight() - getPaddingBottom()) {
                         detachAndScrapView(child, recycler);
+                        removeAndRecycleView(child, recycler);
                         mLastVisiPos--;
                         continue;
                     }
@@ -289,11 +291,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     leftOffset += lineMaxWidth;
                     lineMaxWidth = Math.max(lineMaxWidth, getDecoratedMeasurementHorizontal(child));
                     horizontalCards.put(i, child);
-
-                    //horizontal child over right or left bounds need not layout child
-                    if (leftOffset > getWidth() - getPaddingRight() || leftOffset + getDecoratedMeasuredWidth(child) < getPaddingLeft()) {
-//                        layout_child_flag = false;
-                    }
                 } else {
                     lineMaxWidth = 0;
                     topOffset += lineMaxHeight;
@@ -344,7 +341,8 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 Rect rect = mItemRects.get(i);
                 View child = recycler.getViewForPosition(i);
                 RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(child);
-                if (rect.bottom - mVerticalOffset - dy < getPaddingTop()) {
+//                if (rect.bottom - mVerticalOffset - dy < getPaddingTop()) {
+                if (getDecoratedBottom(child) + appBarVerticalOffset - dy < getPaddingTop()) {
                     if (viewHolder instanceof HorizontalCardViewHolder)
                         mFirstVisiPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(i);
                     else
