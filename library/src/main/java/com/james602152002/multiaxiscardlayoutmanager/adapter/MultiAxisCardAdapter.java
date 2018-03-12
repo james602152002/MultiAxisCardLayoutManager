@@ -163,7 +163,7 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
 
     public void registerDefaultAdapterDataObserver(RecyclerView.AdapterDataObserver defaultAdapterDataObserver) {
         this.defaultAdapterDataObserver = defaultAdapterDataObserver;
-        registerAdapterDataObserver(null);
+        registerAdapterDataObserver(customizeAdapterDataObserver);
     }
 
     @Override
