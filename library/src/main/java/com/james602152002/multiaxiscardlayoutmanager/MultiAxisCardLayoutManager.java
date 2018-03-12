@@ -42,6 +42,10 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     private MultiAxisCardAdapter mAdapter;
     private boolean init = false;
     private short layout_times = 0;
+    private boolean start_measure_animator_dx = true;
+    private int animator_dest_x = 0;
+    private int center_card_position = -1;
+    private int visible_horizontal_cards_in_window = 2;
 
     public MultiAxisCardLayoutManager(@NonNull CardRecyclerView recyclerView) {
         mItemRects = new SparseArray<>();
@@ -180,7 +184,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         mLastVisiPos = getItemCount();
 
                         mItemRects.clear();
-//        horizontalCardItemRects.clear();
+                        horizontalCardItemRects.clear();
                         horizontalCards.clear();
                         mAdapter.reset();
                     }
@@ -347,8 +351,15 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 if (horizontal_cards_scroll_bounds != null) {
                     //first and last horizontal cards are not allow scroll over layout padding.
                     final int first_child_position = horizontal_cards_scroll_bounds[0];
-                    Rect first_child_rect = horizontalCardItemRects.get(first_child_position);
                     final int last_child_position = horizontal_cards_scroll_bounds[1];
+
+                    //Don't scroll when card size is less than 1
+                    if (last_child_position - first_child_position < visible_horizontal_cards_in_window - 1) {
+                        dx = 0;
+                        return dx;
+                    }
+
+                    Rect first_child_rect = horizontalCardItemRects.get(first_child_position);
                     Rect last_child_rect = horizontalCardItemRects.get(last_child_position);
                     if (first_child_rect.left - dx > getPaddingLeft()) {
                         dx = first_child_rect.left - getPaddingLeft();
@@ -473,5 +484,79 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 
     public int getAppBarVerticalOffset() {
         return appBarVerticalOffset;
+    }
+
+    private void setAnimateCards(float ratio) {
+        if (horizontal_cards_scroll_bounds != null) {
+            //first and last horizontal cards are not allow scroll over layout padding.
+            final int first_child_position = horizontal_cards_scroll_bounds[0];
+            final int last_child_position = horizontal_cards_scroll_bounds[1];
+            if (last_child_position - first_child_position < visible_horizontal_cards_in_window - 1)
+                return;
+            int card_count = 0;
+            SparseArray<View> cards = new SparseArray<>();
+            SparseArray<Rect> cardsRect = new SparseArray<>();
+
+
+            for (int position = first_child_position; position <= last_child_position; position++) {
+                final View child = horizontalCards.get(position);
+                cards.put(card_count, child);
+                final Rect childRect = horizontalCardItemRects.get(position);
+                cardsRect.put(card_count, childRect);
+                final int half_width = getWidth() >> 1;
+                if (start_measure_animator_dx && center_card_position == -1 && childRect.left <= half_width && childRect.right >= half_width) {
+                    center_card_position = card_count;
+                }
+                card_count++;
+            }
+
+            if (center_card_position == -1) {
+                cards.clear();
+                cardsRect.clear();
+                return;
+            }
+
+            if (start_measure_animator_dx) {
+                Rect cardRect = cardsRect.get(center_card_position);
+                if (center_card_position == 0) {
+                    //center card is equal to most left horizontal card
+                    animator_dest_x = 0;
+                } else if (center_card_position == card_count - 1) {
+                    //center card is equal to most right horizontal card
+                    animator_dest_x = getWidth() - getDecoratedMeasuredWidth(cards.get(center_card_position));
+                } else {
+                    animator_dest_x = (getWidth() - cardRect.width()) >> 1;
+                }
+                start_measure_animator_dx = false;
+            }
+
+            int dx = (int) ((animator_dest_x - cardsRect.get(center_card_position).left) * ratio);
+
+            for (int position = 0; position < card_count; position++) {
+                View card = cards.get(position);
+                Rect cardRect = cardsRect.get(position);
+                cardRect.left = cardRect.left + dx;
+                cardRect.right = cardRect.right + dx;
+                card.setX(cardRect.left + getLeftDecorationWidth(card));
+            }
+
+            cards.clear();
+            cardsRect.clear();
+        }
+    }
+
+    public void enableStartMeasureAnimatorDx() {
+        start_measure_animator_dx = true;
+        animator_dest_x = 0;
+        center_card_position = -1;
+    }
+
+
+    public int getVisible_horizontal_cards_in_window() {
+        return visible_horizontal_cards_in_window;
+    }
+
+    public void setVisible_horizontal_cards_in_window(int visible_horizontal_cards_in_window) {
+        this.visible_horizontal_cards_in_window = visible_horizontal_cards_in_window;
     }
 }

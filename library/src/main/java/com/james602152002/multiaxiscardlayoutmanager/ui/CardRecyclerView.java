@@ -1,5 +1,7 @@
 package com.james602152002.multiaxiscardlayoutmanager.ui;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewCompat;
@@ -22,6 +24,8 @@ public class CardRecyclerView extends RecyclerView {
     private boolean scroll_vertical;
     private final short touchSlop;
     private MultiAxisCardLayoutManager layoutManager;
+    private final short ANIM_DURATION = 500;
+    private ObjectAnimator horizontal_scroll_animator;
 
     public CardRecyclerView(Context context) {
         super(context);
@@ -50,6 +54,10 @@ public class CardRecyclerView extends RecyclerView {
     public boolean dispatchTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                if (horizontal_scroll_animator != null) {
+                    horizontal_scroll_animator.cancel();
+                    horizontal_scroll_animator = null;
+                }
                 sliding_horizontal_cards = false;
                 scroll_vertical = false;
                 downX = event.getX();
@@ -75,6 +83,7 @@ public class CardRecyclerView extends RecyclerView {
             case MotionEvent.ACTION_UP:
                 touching_horizontal_cards = false;
                 ViewCompat.setNestedScrollingEnabled(this, true);
+                scrollHorizontalCards();
                 break;
         }
         return super.dispatchTouchEvent(event);
@@ -101,5 +110,36 @@ public class CardRecyclerView extends RecyclerView {
         return sliding_horizontal_cards;
     }
 
+    private void scrollHorizontalCards() {
+        if (!sliding_horizontal_cards)
+            return;
+        final float start_value = 0;
+        final float end_value = 1;
+        layoutManager.enableStartMeasureAnimatorDx();
+        horizontal_scroll_animator = ObjectAnimator.ofFloat(layoutManager, "AnimateCards", start_value, end_value);
+        horizontal_scroll_animator.setDuration(ANIM_DURATION);
+        horizontal_scroll_animator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                horizontal_scroll_animator = null;
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        horizontal_scroll_animator.start();
+    }
 
 }
