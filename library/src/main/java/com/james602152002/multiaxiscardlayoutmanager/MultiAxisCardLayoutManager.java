@@ -45,7 +45,8 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     private boolean start_measure_animator_dx = true;
     private int animator_dest_x = 0;
     private int center_card_position = -1;
-    private int visible_horizontal_cards_in_window = 2;
+    //Max visible cards in window.
+    private final int MAX_VIS_H_CARDS_IN_WINDOW = 2;
 
     public MultiAxisCardLayoutManager(@NonNull CardRecyclerView recyclerView) {
         mItemRects = new SparseArray<>();
@@ -137,23 +138,32 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         if (mAdapter == null) {
             mAdapter = (MultiAxisCardAdapter) recyclerView.getAdapter();
             if (mAdapter != null)
-                mAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+                mAdapter.registerDefaultAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
 
                     @Override
                     public void onItemRangeChanged(int positionStart, int itemCount) {
                         super.onItemRangeChanged(positionStart, itemCount);
+                        RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
+                        if (defaultAdapterDataObserver != null)
+                            defaultAdapterDataObserver.onItemRangeChanged(positionStart, itemCount);
                         Log.i("", "1");
                     }
 
                     @Override
                     public void onItemRangeChanged(int positionStart, int itemCount, @Nullable Object payload) {
                         super.onItemRangeChanged(positionStart, itemCount, payload);
+                        RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
+                        if (defaultAdapterDataObserver != null)
+                            defaultAdapterDataObserver.onItemRangeChanged(positionStart, itemCount, payload);
                         Log.i("", "2");
                     }
 
                     @Override
                     public void onItemRangeInserted(int positionStart, int itemCount) {
                         super.onItemRangeInserted(positionStart, itemCount);
+                        RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
+                        if (defaultAdapterDataObserver != null)
+                            defaultAdapterDataObserver.onItemRangeInserted(positionStart, itemCount);
                         Log.i("", "3");
                         mAdapter.reset();
 //                        mLastVisiPos = getItemCount();
@@ -163,18 +173,27 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     @Override
                     public void onItemRangeRemoved(int positionStart, int itemCount) {
                         super.onItemRangeRemoved(positionStart, itemCount);
+                        RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
+                        if (defaultAdapterDataObserver != null)
+                            defaultAdapterDataObserver.onItemRangeRemoved(positionStart, itemCount);
                         Log.i("", "4");
                     }
 
                     @Override
                     public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
                         super.onItemRangeMoved(fromPosition, toPosition, itemCount);
+                        RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
+                        if (defaultAdapterDataObserver != null)
+                            defaultAdapterDataObserver.onItemRangeMoved(fromPosition, toPosition, itemCount);
                         Log.i("", "5");
                     }
 
                     @Override
                     public void onChanged() {
                         super.onChanged();
+                        RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
+                        if (defaultAdapterDataObserver != null)
+                            defaultAdapterDataObserver.onChanged();
                         Log.i("", "6");
                         if (recycler != null)
                             removeAndRecycleAllViews(recycler);
@@ -354,7 +373,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     final int last_child_position = horizontal_cards_scroll_bounds[1];
 
                     //Don't scroll when card size is less than 1
-                    if (last_child_position - first_child_position < visible_horizontal_cards_in_window - 1) {
+                    if (last_child_position - first_child_position < MAX_VIS_H_CARDS_IN_WINDOW - 1) {
                         dx = 0;
                         return dx;
                     }
@@ -491,7 +510,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             //first and last horizontal cards are not allow scroll over layout padding.
             final int first_child_position = horizontal_cards_scroll_bounds[0];
             final int last_child_position = horizontal_cards_scroll_bounds[1];
-            if (last_child_position - first_child_position < visible_horizontal_cards_in_window - 1)
+            if (last_child_position - first_child_position < MAX_VIS_H_CARDS_IN_WINDOW - 1)
                 return;
             int card_count = 0;
             SparseArray<View> cards = new SparseArray<>();
@@ -551,12 +570,4 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         center_card_position = -1;
     }
 
-
-    public int getVisible_horizontal_cards_in_window() {
-        return visible_horizontal_cards_in_window;
-    }
-
-    public void setVisible_horizontal_cards_in_window(int visible_horizontal_cards_in_window) {
-        this.visible_horizontal_cards_in_window = visible_horizontal_cards_in_window;
-    }
 }

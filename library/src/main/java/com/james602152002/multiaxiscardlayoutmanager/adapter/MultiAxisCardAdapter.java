@@ -31,6 +31,7 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
     protected final int vertical_view_id;
     protected final int horizontal_view_id;
     private int count = 0;
+    private RecyclerView.AdapterDataObserver defaultAdapterDataObserver, customizeAdapterDataObserver;
 
     public MultiAxisCardAdapter(Context context, SparseArray<Object> items, int vertical_view_id, int horizontal_view_id) {
         inflater = LayoutInflater.from(context);
@@ -160,4 +161,33 @@ public class MultiAxisCardAdapter extends RecyclerView.Adapter<BaseCardViewHolde
         }
     }
 
+    public void registerDefaultAdapterDataObserver(RecyclerView.AdapterDataObserver defaultAdapterDataObserver) {
+        this.defaultAdapterDataObserver = defaultAdapterDataObserver;
+        registerAdapterDataObserver(null);
+    }
+
+    @Override
+    public void registerAdapterDataObserver(RecyclerView.AdapterDataObserver observer) {
+        if (defaultAdapterDataObserver != null) {
+            super.registerAdapterDataObserver(defaultAdapterDataObserver);
+            customizeAdapterDataObserver = observer;
+        } else {
+            super.registerAdapterDataObserver(observer);
+            customizeAdapterDataObserver = observer;
+        }
+    }
+
+    @Override
+    public void unregisterAdapterDataObserver(RecyclerView.AdapterDataObserver observer) {
+        if (defaultAdapterDataObserver != null) {
+            super.unregisterAdapterDataObserver(defaultAdapterDataObserver);
+        } else {
+            super.unregisterAdapterDataObserver(observer);
+        }
+        customizeAdapterDataObserver = null;
+    }
+
+    public RecyclerView.AdapterDataObserver getCustomizeAdapterDataObserver() {
+        return customizeAdapterDataObserver;
+    }
 }
