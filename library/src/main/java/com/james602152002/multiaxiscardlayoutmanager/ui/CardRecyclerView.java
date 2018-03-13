@@ -24,7 +24,7 @@ public class CardRecyclerView extends RecyclerView {
     private boolean scroll_vertical;
     private final short touchSlop;
     private MultiAxisCardLayoutManager layoutManager;
-    private final short ANIM_DURATION = 500;
+    private final short ANIM_DURATION = 300;
     private ObjectAnimator horizontal_scroll_animator;
 
     public CardRecyclerView(Context context) {

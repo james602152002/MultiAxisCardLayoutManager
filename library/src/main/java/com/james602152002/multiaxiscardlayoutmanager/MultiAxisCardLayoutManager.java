@@ -264,12 +264,14 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 View lastView = getChildAt(getChildCount() - 1);
                 RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(lastView);
                 //Calculate your new line position
-                if (viewHolder instanceof HorizontalCardViewHolder)
+                if (viewHolder instanceof HorizontalCardViewHolder) {
                     minPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(mFirstVisiPos + getChildCount() - 1);
-                    // If you use get lastView it will have bug when datasetchanged. Because of wrong position, you cannot calculate minPosition precisely.
-                    //minPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(getPosition(lastView));
-                else
+                }
+                // If you use get lastView it will have bug when datasetchanged. Because of wrong position, you cannot calculate minPosition precisely.
+                //minPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(getPosition(lastView));
+                else {
                     minPos = getPosition(lastView) + 1;
+                }
                 topOffset = getDecoratedTop(lastView);
                 lineMaxHeight = Math.max(lineMaxHeight, getDecoratedMeasurementVertical(lastView));
             }
@@ -302,13 +304,14 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 if (topOffset - dy > getHeight() - getPaddingBottom() - appBarVerticalOffset) {
                     //recycle when out of bounds
                     detachAndScrapView(child, recycler);
-                    removeAndRecycleView(child, recycler);
                     mLastVisiPos = i - 1;
                 } else {
                     Rect rect;
                     if (mItemRects.get(i) != null) {
                         //If you have saved rect you need't save it at all.
                         rect = mItemRects.get(i);
+                        rect.top = topOffset + mVerticalOffset;
+                        rect.bottom = topOffset + getDecoratedMeasurementVertical(child) + mVerticalOffset;
                     } else {
                         //Save rect for reverse order.
                         rect = new Rect();
@@ -331,7 +334,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             }
             //If you don't have more item view in bottom then fix it.
             View lastChild = getChildAt(getChildCount() - 1);
-            if (getPosition(lastChild) == getItemCount() - 1) {
+            if (lastChild != null && getPosition(lastChild) == getItemCount() - 1) {
                 int gap = getHeight() - getPaddingBottom() - getDecoratedBottom(lastChild);
                 if (gap > 0) {
                     dy -= gap;
@@ -345,30 +348,34 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             mFirstVisiPos = 0;
             if (getChildCount() > 0) {
                 View firstView = getChildAt(0);
-                maxPos = getPosition(firstView) - 1;
+                maxPos = recyclerView.getChildViewHolder(firstView).getAdapterPosition() - 1;
             }
-            for (int i = maxPos; i >= mFirstVisiPos; i--) {
-                Rect rect = mItemRects.get(i);
-                View child = recycler.getViewForPosition(i);
-                RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(child);
-//                if (rect.bottom - mVerticalOffset - dy < getPaddingTop()) {
-                if (getDecoratedBottom(child) + appBarVerticalOffset - dy < getPaddingTop()) {
-                    if (viewHolder instanceof HorizontalCardViewHolder)
-                        mFirstVisiPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(i);
-                    else
-                        mFirstVisiPos = i + 1;
-                    break;
-                } else {
-                    addView(child, 0);
-                    measureChildWithMargins(child, 0, 0);
+            //when add first child in adapter you need not add any view at all.
+            if (maxPos >= 0)
+                for (int i = maxPos; i >= mFirstVisiPos; i--) {
+                    Rect rect = mItemRects.get(i);
+                    View child = recycler.getViewForPosition(i);
+                    RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(child);
+                    if (getDecoratedBottom(child) + appBarVerticalOffset - dy < getPaddingTop()) {
+                        if (viewHolder instanceof HorizontalCardViewHolder) {
+                            mFirstVisiPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(i);
+                            if (mFirstVisiPos - 1 == i)
+                                break;
+                        } else {
+                            mFirstVisiPos = i + 1;
+                            break;
+                        }
+                    } else {
+                        addView(child, 0);
+                        measureChildWithMargins(child, 0, 0);
 
-                    layoutDecoratedWithMargins(child, rect.left, rect.top - mVerticalOffset, rect.right, rect.bottom - mVerticalOffset);
-                    if (viewHolder instanceof HorizontalCardViewHolder) {
-                        horizontalCards.put(i, child);
-                        child.setX(rect.left + getLeftDecorationWidth(child));
+                        layoutDecoratedWithMargins(child, rect.left, rect.top - mVerticalOffset, rect.right, rect.bottom - mVerticalOffset);
+                        if (viewHolder instanceof HorizontalCardViewHolder) {
+                            horizontalCards.put(i, child);
+                            child.setX(rect.left + getLeftDecorationWidth(child));
+                        }
                     }
                 }
-            }
         }
 
         //when dy is equal to zero that means it probably in horizontal slide mode
