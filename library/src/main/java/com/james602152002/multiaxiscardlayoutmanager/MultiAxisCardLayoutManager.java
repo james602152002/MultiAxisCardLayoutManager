@@ -230,6 +230,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         int topOffset = getPaddingTop();
         int leftOffset;
         //Recycle Child Logic
+        Log.i("", "default first vis position =========== " + mFirstVisiPos);
         if (getChildCount() > 0) {
             for (int i = getChildCount() - 1; i >= 0; i--) {
                 View child = getChildAt(i);
@@ -264,6 +265,8 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 View lastView = getChildAt(getChildCount() - 1);
                 RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(lastView);
                 //Calculate your new line position
+                Log.i("", "first vis pos ========= " + mFirstVisiPos);
+                Log.i("", "child count ==============  " + getChildCount());
                 if (viewHolder instanceof HorizontalCardViewHolder) {
                     minPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(mFirstVisiPos + getChildCount() - 1);
                 }
@@ -357,14 +360,8 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     View child = recycler.getViewForPosition(i);
                     RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(child);
                     if (getDecoratedBottom(child) + appBarVerticalOffset - dy < getPaddingTop()) {
-                        if (viewHolder instanceof HorizontalCardViewHolder) {
-                            mFirstVisiPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(i);
-                            if (mFirstVisiPos - 1 == i)
-                                break;
-                        } else {
-                            mFirstVisiPos = i + 1;
-                            break;
-                        }
+                        mFirstVisiPos = i + 1;
+                        break;
                     } else {
                         addView(child, 0);
                         measureChildWithMargins(child, 0, 0);
