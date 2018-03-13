@@ -302,21 +302,30 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 if (topOffset - dy > getHeight() - getPaddingBottom() - appBarVerticalOffset) {
                     //recycle when out of bounds
                     detachAndScrapView(child, recycler);
+                    removeAndRecycleView(child, recycler);
                     mLastVisiPos = i - 1;
                 } else {
-                    //Save rect for reverse order.
-                    Rect rect = new Rect();
-                    rect.left = leftOffset;
-                    rect.top = topOffset + mVerticalOffset;
-                    rect.right = leftOffset + getDecoratedMeasurementHorizontal(child);
-                    rect.bottom = topOffset + getDecoratedMeasurementVertical(child) + mVerticalOffset;
+                    Rect rect;
+                    if (mItemRects.get(i) != null) {
+                        //If you have saved rect you need't save it at all.
+                        rect = mItemRects.get(i);
+                    } else {
+                        //Save rect for reverse order.
+                        rect = new Rect();
+                        rect.left = leftOffset;
+                        rect.top = topOffset + mVerticalOffset;
+                        rect.right = leftOffset + getDecoratedMeasurementHorizontal(child);
+                        rect.bottom = topOffset + getDecoratedMeasurementVertical(child) + mVerticalOffset;
+                        mItemRects.put(i, rect);
+                    }
+
                     if (viewHolder instanceof HorizontalCardViewHolder) {
                         horizontalCardItemRects.put(i, rect);
                     }
-                    mItemRects.put(i, rect);
+
                     //change child left and lineHeight
                     lineMaxHeight = Math.max(lineMaxHeight, getDecoratedMeasurementVertical(child));
-                    layoutDecoratedWithMargins(child, leftOffset, topOffset, rect.right, topOffset + getDecoratedMeasurementVertical(child));
+                    layoutDecoratedWithMargins(child, rect.left, topOffset, rect.right, topOffset + getDecoratedMeasurementVertical(child));
                     child.setX(rect.left + getLeftDecorationWidth(child));
                 }
             }
