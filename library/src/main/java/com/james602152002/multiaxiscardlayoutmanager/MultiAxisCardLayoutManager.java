@@ -317,6 +317,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     //change child left and lineHeight
                     lineMaxHeight = Math.max(lineMaxHeight, getDecoratedMeasurementVertical(child));
                     layoutDecoratedWithMargins(child, leftOffset, topOffset, rect.right, topOffset + getDecoratedMeasurementVertical(child));
+                    child.setX(rect.left + getLeftDecorationWidth(child));
                 }
             }
             //If you don't have more item view in bottom then fix it.
