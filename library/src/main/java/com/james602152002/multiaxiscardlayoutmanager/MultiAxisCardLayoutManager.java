@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 
 import com.james602152002.multiaxiscardlayoutmanager.adapter.MultiAxisCardAdapter;
 import com.james602152002.multiaxiscardlayoutmanager.ui.CardRecyclerView;
+import com.james602152002.multiaxiscardlayoutmanager.viewholder.BaseCardViewHolder;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.HorizontalCardViewHolder;
 
 import java.lang.reflect.Field;
@@ -236,14 +237,14 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 if (dy > 0) {//Recycle top child out of bounds.
                     if (getDecoratedBottom(child) + appBarVerticalOffset - dy < topOffset) {
                         detachAndScrapView(child, recycler);
-                        removeAndRecycleView(child, recycler);
+//                        removeAndRecycleView(child, recycler);
                         mFirstVisiPos++;
                         continue;
                     }
                 } else if (dy < 0) {//Recycle bottom child out of bounds.
                     if (getDecoratedTop(child) + appBarVerticalOffset - dy > getHeight() - getPaddingBottom()) {
                         detachAndScrapView(child, recycler);
-                        removeAndRecycleView(child, recycler);
+//                        removeAndRecycleView(child, recycler);
                         mLastVisiPos--;
                         continue;
                     }
@@ -280,11 +281,11 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             for (int i = minPos; i <= mLastVisiPos; i++) {
                 //Get view from recycler to save your memory and cpu.
                 View child = recycler.getViewForPosition(i);
-                RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(child);
+                BaseCardViewHolder viewHolder = (BaseCardViewHolder) recyclerView.getChildViewHolder(child);
                 //you need add child first to measure child
                 Rect rect = mItemRects.get(i);
                 if (rect == null) {
-                    //layout child when view is in visible position
+                    //add child view to measure it
                     addAndMeasureChild(child);
                     //change child left and lineHeight
                     if (viewHolder instanceof HorizontalCardViewHolder) {
@@ -294,7 +295,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 
                         leftOffset += lineMaxWidth;
                         lineMaxWidth = Math.max(lineMaxWidth, getDecoratedMeasurementHorizontal(child));
-                        horizontalCards.put(i, child);
                     } else {
                         lineMaxWidth = 0;
                         topOffset += lineMaxHeight;
@@ -311,6 +311,8 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 if (topOffset - dy > getHeight() - getPaddingBottom() - appBarVerticalOffset) {
                     //recycle when out of bounds
                     if (rect == null) {
+//                        removeView(child);
+//                        removeAndRecycleView(child, recycler);
                         detachAndScrapView(child, recycler);
                     }
                     mLastVisiPos = i - 1;
@@ -329,12 +331,14 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 
                     if (viewHolder instanceof HorizontalCardViewHolder) {
                         horizontalCardItemRects.put(i, rect);
+                        horizontalCards.put(i, child);
                     }
 
                     //change child left and lineHeight
                     lineMaxHeight = Math.max(lineMaxHeight, rect.bottom - rect.top);
                     layoutDecoratedWithMargins(child, rect.left, rect.top - mVerticalOffset, rect.right, rect.bottom - mVerticalOffset);
                     child.setX(rect.left + getLeftDecorationWidth(child));
+                    mAdapter.onBindViewHolder(viewHolder, i);
                 }
             }
             //If you don't have more item view in bottom then fix it.
@@ -584,4 +588,9 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         center_card_position = -1;
     }
 
+    @Override
+    public void onDetachedFromWindow(RecyclerView view, RecyclerView.Recycler recycler) {
+        super.onDetachedFromWindow(view, recycler);
+        removeAndRecycleAllViews(recycler);
+    }
 }
