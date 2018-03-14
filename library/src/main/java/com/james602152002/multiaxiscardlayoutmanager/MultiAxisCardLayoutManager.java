@@ -230,7 +230,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         int topOffset = getPaddingTop();
         int leftOffset;
         //Recycle Child Logic
-        Log.i("", "default first vis position =========== " + mFirstVisiPos);
         if (getChildCount() > 0) {
             for (int i = getChildCount() - 1; i >= 0; i--) {
                 View child = getChildAt(i);
@@ -265,8 +264,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 View lastView = getChildAt(getChildCount() - 1);
                 RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(lastView);
                 //Calculate your new line position
-                Log.i("", "first vis pos ========= " + mFirstVisiPos);
-                Log.i("", "child count ==============  " + getChildCount());
                 if (viewHolder instanceof HorizontalCardViewHolder) {
                     minPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(mFirstVisiPos + getChildCount() - 1);
                 }
@@ -283,38 +280,43 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             for (int i = minPos; i <= mLastVisiPos; i++) {
                 //Get view from recycler to save your memory and cpu.
                 View child = recycler.getViewForPosition(i);
-                //you need add child first to measure child
-                addAndMeasureChild(child);
-                //layout child when view is in visible position
                 RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(child);
-                //change child left and lineHeight
-                if (viewHolder instanceof HorizontalCardViewHolder) {
-                    if (((MultiAxisCardAdapter) recyclerView.getAdapter()).isFirstHorizontalCard(i)) {
+                //you need add child first to measure child
+                Rect rect = mItemRects.get(i);
+                if (rect == null) {
+                    //layout child when view is in visible position
+                    addAndMeasureChild(child);
+                    //change child left and lineHeight
+                    if (viewHolder instanceof HorizontalCardViewHolder) {
+                        if (((MultiAxisCardAdapter) recyclerView.getAdapter()).isFirstHorizontalCard(i)) {
+                            topOffset += lineMaxHeight;
+                        }
+
+                        leftOffset += lineMaxWidth;
+                        lineMaxWidth = Math.max(lineMaxWidth, getDecoratedMeasurementHorizontal(child));
+                        horizontalCards.put(i, child);
+                    } else {
+                        lineMaxWidth = 0;
                         topOffset += lineMaxHeight;
+                        leftOffset = getPaddingLeft() + dx;
                     }
 
-                    leftOffset += lineMaxWidth;
-                    lineMaxWidth = Math.max(lineMaxWidth, getDecoratedMeasurementHorizontal(child));
-                    horizontalCards.put(i, child);
+                    lineMaxHeight = 0;
                 } else {
-                    lineMaxWidth = 0;
-                    topOffset += lineMaxHeight;
-                    leftOffset = getPaddingLeft() + dx;
+                    //If you saved child rect you needn't measure child rect.
+                    leftOffset = rect.left;
+                    topOffset = rect.top - mVerticalOffset;
                 }
-
-                lineMaxHeight = 0;
                 //scroll to new line and decide to add child
                 if (topOffset - dy > getHeight() - getPaddingBottom() - appBarVerticalOffset) {
                     //recycle when out of bounds
-                    detachAndScrapView(child, recycler);
+                    if (rect == null) {
+                        detachAndScrapView(child, recycler);
+                    }
                     mLastVisiPos = i - 1;
                 } else {
-                    Rect rect;
-                    if (mItemRects.get(i) != null) {
-                        //If you have saved rect you need't save it at all.
-                        rect = mItemRects.get(i);
-                        rect.top = topOffset + mVerticalOffset;
-                        rect.bottom = topOffset + getDecoratedMeasurementVertical(child) + mVerticalOffset;
+                    if (rect != null) {
+                        addAndMeasureChild(child);
                     } else {
                         //Save rect for reverse order.
                         rect = new Rect();
@@ -330,8 +332,8 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     }
 
                     //change child left and lineHeight
-                    lineMaxHeight = Math.max(lineMaxHeight, getDecoratedMeasurementVertical(child));
-                    layoutDecoratedWithMargins(child, rect.left, topOffset, rect.right, topOffset + getDecoratedMeasurementVertical(child));
+                    lineMaxHeight = Math.max(lineMaxHeight, rect.bottom - rect.top);
+                    layoutDecoratedWithMargins(child, rect.left, rect.top - mVerticalOffset, rect.right, rect.bottom - mVerticalOffset);
                     child.setX(rect.left + getLeftDecorationWidth(child));
                 }
             }
