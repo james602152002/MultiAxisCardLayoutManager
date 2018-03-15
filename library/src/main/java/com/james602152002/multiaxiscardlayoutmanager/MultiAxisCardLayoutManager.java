@@ -250,6 +250,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         continue;
                     }
                 }
+                removeHorizontalCardsSparseArr();
             }
         }
 
@@ -453,6 +454,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         int realOffset = dy;
         if (mVerticalOffset + realOffset < 0) {
             realOffset = -mVerticalOffset;
+            AT_MOST_V_POS = false;
         } else if (realOffset > 0) {
             View lastChild = getChildAt(getChildCount() - 1);
             if (getPosition(lastChild) == getItemCount() - 1) {
@@ -464,8 +466,10 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 } else {
                     realOffset = Math.min(realOffset, -gap);
                 }
+                AT_MOST_V_POS = true;
+            } else {
+                AT_MOST_V_POS = false;
             }
-            AT_MOST_V_POS = true;
         }
 
         if (!recyclerView.isSliding_horizontal_cards()) {
