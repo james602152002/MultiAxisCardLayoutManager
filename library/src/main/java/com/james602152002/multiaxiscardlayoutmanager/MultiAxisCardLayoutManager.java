@@ -48,6 +48,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     private int center_card_position = -1;
     //Max visible cards in window.
     private final int MAX_VIS_H_CARDS_IN_WINDOW = 2;
+    private boolean AT_MOST_V_POS = true;
 
     public MultiAxisCardLayoutManager(@NonNull CardRecyclerView recyclerView) {
         mItemRects = new SparseArray<>();
@@ -244,7 +245,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 } else if (dy < 0) {//Recycle bottom child out of bounds.
                     if (getDecoratedTop(child) + appBarVerticalOffset - dy > getHeight() - getPaddingBottom()) {
                         detachAndScrapView(child, recycler);
-//                        removeAndRecycleView(child, recycler);
+                        removeAndRecycleView(child, recycler);
                         mLastVisiPos--;
                         continue;
                     }
@@ -307,13 +308,12 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     leftOffset = rect.left;
                     topOffset = rect.top - mVerticalOffset;
                 }
-                //scroll to new line and decide to add child
+                //scroll to new line and decide to recycle child
                 if (topOffset - dy > getHeight() - getPaddingBottom() - appBarVerticalOffset) {
                     //recycle when out of bounds
                     if (rect == null) {
-//                        removeView(child);
-//                        removeAndRecycleView(child, recycler);
                         detachAndScrapView(child, recycler);
+                        removeHorizontalCardsSparseArr();
                     }
                     mLastVisiPos = i - 1;
                 } else {
@@ -363,20 +363,26 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             if (maxPos >= 0)
                 for (int i = maxPos; i >= mFirstVisiPos; i--) {
                     Rect rect = mItemRects.get(i);
+                    if (rect == null) {
+                        break;
+                    }
                     View child = recycler.getViewForPosition(i);
-                    RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(child);
-                    if (getDecoratedBottom(child) + appBarVerticalOffset - dy < getPaddingTop()) {
+                    BaseCardViewHolder viewHolder = (BaseCardViewHolder) recyclerView.getChildViewHolder(child);
+                    if (rect.bottom - mVerticalOffset + appBarVerticalOffset - dy < getPaddingTop()) {
                         mFirstVisiPos = i + 1;
+                        removeHorizontalCardsSparseArr();
                         break;
                     } else {
+                        //add view and measure child when view is visible
                         addView(child, 0);
                         measureChildWithMargins(child, 0, 0);
-
                         layoutDecoratedWithMargins(child, rect.left, rect.top - mVerticalOffset, rect.right, rect.bottom - mVerticalOffset);
                         if (viewHolder instanceof HorizontalCardViewHolder) {
                             horizontalCards.put(i, child);
+                            horizontalCardItemRects.put(i, rect);
                             child.setX(rect.left + getLeftDecorationWidth(child));
                         }
+//                        mAdapter.onBindViewHolder(viewHolder, i);
                     }
                 }
         }
@@ -418,6 +424,16 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         return dy;
     }
 
+    private void removeHorizontalCardsSparseArr() {
+        for (int position = 0; position < horizontalCards.size(); position++) {
+            final int key = horizontalCards.keyAt(position);
+            if (key < mFirstVisiPos || key > mLastVisiPos) {
+                horizontalCardItemRects.remove(key);
+                horizontalCards.remove(key);
+            }
+        }
+    }
+
     private void addAndMeasureChild(View child) {
         addView(child);
         measureChildWithMargins(child, 0, 0);
@@ -449,6 +465,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     realOffset = Math.min(realOffset, -gap);
                 }
             }
+            AT_MOST_V_POS = true;
         }
 
         if (!recyclerView.isSliding_horizontal_cards()) {
@@ -592,5 +609,12 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     public void onDetachedFromWindow(RecyclerView view, RecyclerView.Recycler recycler) {
         super.onDetachedFromWindow(view, recycler);
         removeAndRecycleAllViews(recycler);
+    }
+
+    public boolean isAT_MOST_V_POS() {
+        if (mVerticalOffset == 0) {
+            AT_MOST_V_POS = true;
+        }
+        return true;
     }
 }

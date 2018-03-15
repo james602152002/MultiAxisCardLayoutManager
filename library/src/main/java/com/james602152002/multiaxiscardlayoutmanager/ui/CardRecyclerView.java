@@ -67,6 +67,10 @@ public class CardRecyclerView extends RecyclerView {
                 touching_horizontal_cards = layoutManager.isTouchingHorizontalCard(downX, downY);
                 break;
             case MotionEvent.ACTION_MOVE:
+                //if fling break the logic
+                if (getScrollState() == SCROLL_STATE_DRAGGING && !layoutManager.isAT_MOST_V_POS()) {
+                    break;
+                }
                 if (!sliding_horizontal_cards && Math.abs(event.getY() - downY + appbar_saved_offset - layoutManager.getAppBarVerticalOffset()) > touchSlop) {
                     scroll_vertical = true;
                 }
