@@ -48,7 +48,10 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     private int center_card_position = -1;
     //Max visible cards in window.
     private final int MAX_VIS_H_CARDS_IN_WINDOW = 2;
-    private boolean AT_MOST_V_POS = true;
+    public final short DIRECTION_LEFT = -1;
+    public final short DIRECTION_RIGHT = 1;
+    public final short DIRECTION_ORIGIN = 0;
+    private short direction = DIRECTION_ORIGIN;
 
     public MultiAxisCardLayoutManager(@NonNull CardRecyclerView recyclerView) {
         mItemRects = new SparseArray<>();
@@ -454,7 +457,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         int realOffset = dy;
         if (mVerticalOffset + realOffset < 0) {
             realOffset = -mVerticalOffset;
-            AT_MOST_V_POS = false;
         } else if (realOffset > 0) {
             View lastChild = getChildAt(getChildCount() - 1);
             if (getPosition(lastChild) == getItemCount() - 1) {
@@ -466,9 +468,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 } else {
                     realOffset = Math.min(realOffset, -gap);
                 }
-                AT_MOST_V_POS = true;
-            } else {
-                AT_MOST_V_POS = false;
             }
         }
 
@@ -544,6 +543,10 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         return appBarVerticalOffset;
     }
 
+    public void setDirection(short direction) {
+        this.direction = direction;
+    }
+
     private void setAnimateCards(float ratio) {
         if (horizontal_cards_scroll_bounds != null) {
             //first and last horizontal cards are not allow scroll over layout padding.
@@ -564,6 +567,10 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 final int half_width = getWidth() >> 1;
                 if (start_measure_animator_dx && center_card_position == -1 && childRect.left <= half_width && childRect.right >= half_width) {
                     center_card_position = card_count;
+                    final int next_center_card_position = center_card_position + direction;
+                    if (!(next_center_card_position < 0 || next_center_card_position > last_child_position - first_child_position)) {
+                        center_card_position = next_center_card_position;
+                    }
                 }
                 card_count++;
             }
@@ -603,6 +610,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         }
     }
 
+
     public void enableStartMeasureAnimatorDx() {
         start_measure_animator_dx = true;
         animator_dest_x = 0;
@@ -615,10 +623,10 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
         removeAndRecycleAllViews(recycler);
     }
 
-    public boolean isAT_MOST_V_POS() {
-        if (mVerticalOffset == 0) {
-            AT_MOST_V_POS = true;
+    public int getHorizontalCardLimit() {
+        if (horizontalCardItemRects.size() > 0) {
+            return (int)(horizontalCardItemRects.get(horizontalCardItemRects.keyAt(0)).width() * .4f);
         }
-        return true;
+        return (int) (getWidth() * .4f);
     }
 }

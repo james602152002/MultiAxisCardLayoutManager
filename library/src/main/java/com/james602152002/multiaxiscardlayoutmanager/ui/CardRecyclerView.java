@@ -8,6 +8,7 @@ import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.ViewConfiguration;
 
 import com.james602152002.multiaxiscardlayoutmanager.MultiAxisCardLayoutManager;
@@ -26,6 +27,7 @@ public class CardRecyclerView extends RecyclerView {
     private MultiAxisCardLayoutManager layoutManager;
     private final short ANIM_DURATION = 300;
     private ObjectAnimator horizontal_scroll_animator;
+    private VelocityTracker velocityTracker;
 
     public CardRecyclerView(Context context) {
         super(context);
@@ -65,12 +67,13 @@ public class CardRecyclerView extends RecyclerView {
                 downY = event.getY();
                 appbar_saved_offset = layoutManager.getAppBarVerticalOffset();
                 touching_horizontal_cards = layoutManager.isTouchingHorizontalCard(downX, downY);
+                initVelocityTracker(event);
                 break;
             case MotionEvent.ACTION_MOVE:
                 //if fling break the logic
-                if (getScrollState() == SCROLL_STATE_DRAGGING && !layoutManager.isAT_MOST_V_POS()) {
-                    break;
-                }
+//                if (getScrollState() == SCROLL_STATE_DRAGGING && !layoutManager.isAT_MOST_V_POS()) {
+//                    break;
+//                }
                 if (!sliding_horizontal_cards && Math.abs(event.getY() - downY + appbar_saved_offset - layoutManager.getAppBarVerticalOffset()) > touchSlop) {
                     scroll_vertical = true;
                 }
@@ -82,12 +85,19 @@ public class CardRecyclerView extends RecyclerView {
                     moveX = event.getX();
                     ViewCompat.setNestedScrollingEnabled(this, false);
                 }
+                velocityTracker.addMovement(event);
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 touching_horizontal_cards = false;
                 ViewCompat.setNestedScrollingEnabled(this, true);
-                scrollHorizontalCards();
+                velocityTracker.addMovement(event);
+                velocityTracker.computeCurrentVelocity(1000);
+                final float velocity = velocityTracker.getXVelocity();
+                velocityTracker.clear();
+                velocityTracker.recycle();
+                velocityTracker = null;
+                scrollHorizontalCards(event.getX(), velocity);
                 break;
         }
         return super.dispatchTouchEvent(event);
@@ -114,12 +124,23 @@ public class CardRecyclerView extends RecyclerView {
         return sliding_horizontal_cards;
     }
 
-    private void scrollHorizontalCards() {
+    private void scrollHorizontalCards(float upX, float velocity) {
         if (!sliding_horizontal_cards)
             return;
         final float start_value = 0;
         final float end_value = 1;
         layoutManager.enableStartMeasureAnimatorDx();
+        final int limit_width = layoutManager.getHorizontalCardLimit();
+        final float abs_dx = Math.abs(downX - upX);
+        if (Math.abs(velocity) > abs_dx && abs_dx < limit_width) {
+            if (upX > downX) {
+                layoutManager.setDirection(layoutManager.DIRECTION_LEFT);
+            } else {
+                layoutManager.setDirection(layoutManager.DIRECTION_RIGHT);
+            }
+        } else {
+            layoutManager.setDirection(layoutManager.DIRECTION_ORIGIN);
+        }
         horizontal_scroll_animator = ObjectAnimator.ofFloat(layoutManager, "AnimateCards", start_value, end_value);
         horizontal_scroll_animator.setDuration(ANIM_DURATION);
         horizontal_scroll_animator.addListener(new Animator.AnimatorListener() {
@@ -144,6 +165,13 @@ public class CardRecyclerView extends RecyclerView {
             }
         });
         horizontal_scroll_animator.start();
+    }
+
+    private void initVelocityTracker(MotionEvent event) {
+        if (velocityTracker == null) {
+            velocityTracker = VelocityTracker.obtain();
+        }
+        velocityTracker.addMovement(event);
     }
 
 }
