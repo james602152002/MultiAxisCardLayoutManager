@@ -24,6 +24,7 @@ import java.lang.reflect.Field;
 
 public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 
+    private final boolean DEBUG = false;
     private int mVerticalOffset;
     private int mFirstVisiPos;
     private int mLastVisiPos;
@@ -151,7 +152,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
                         if (defaultAdapterDataObserver != null)
                             defaultAdapterDataObserver.onItemRangeChanged(positionStart, itemCount);
-                        Log.i("", "1");
+                        log("1");
                     }
 
                     @Override
@@ -160,7 +161,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
                         if (defaultAdapterDataObserver != null)
                             defaultAdapterDataObserver.onItemRangeChanged(positionStart, itemCount, payload);
-                        Log.i("", "2");
+                        log("2");
                     }
 
                     @Override
@@ -169,7 +170,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
                         if (defaultAdapterDataObserver != null)
                             defaultAdapterDataObserver.onItemRangeInserted(positionStart, itemCount);
-                        Log.i("", "3");
+                        log("3");
                         mAdapter.reset();
 //                        mLastVisiPos = getItemCount();
                         app_bar_offset_init = false;
@@ -181,7 +182,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
                         if (defaultAdapterDataObserver != null)
                             defaultAdapterDataObserver.onItemRangeRemoved(positionStart, itemCount);
-                        Log.i("", "4");
+                        log("4");
                     }
 
                     @Override
@@ -190,7 +191,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
                         if (defaultAdapterDataObserver != null)
                             defaultAdapterDataObserver.onItemRangeMoved(fromPosition, toPosition, itemCount);
-                        Log.i("", "5");
+                        log("5");
                     }
 
                     @Override
@@ -199,7 +200,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
                         if (defaultAdapterDataObserver != null)
                             defaultAdapterDataObserver.onChanged();
-                        Log.i("", "6");
+                        log("6");
                         if (recycler != null)
                             removeAndRecycleAllViews(recycler);
                         //reset
@@ -625,8 +626,13 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 
     public int getHorizontalCardLimit() {
         if (horizontalCardItemRects.size() > 0) {
-            return (int)(horizontalCardItemRects.get(horizontalCardItemRects.keyAt(0)).width() * .4f);
+            return (int) (horizontalCardItemRects.get(horizontalCardItemRects.keyAt(0)).width() * .4f);
         }
         return (int) (getWidth() * .4f);
+    }
+
+    private void log(String content) {
+        if (DEBUG)
+            Log.i("", "" + content);
     }
 }

@@ -71,9 +71,9 @@ public class CardRecyclerView extends RecyclerView {
                 break;
             case MotionEvent.ACTION_MOVE:
                 //if fling break the logic
-//                if (getScrollState() == SCROLL_STATE_DRAGGING && !layoutManager.isAT_MOST_V_POS()) {
-//                    break;
-//                }
+                if (getScrollState() == SCROLL_STATE_DRAGGING && !atMostVertical()) {
+                    break;
+                }
                 if (!sliding_horizontal_cards && Math.abs(event.getY() - downY + appbar_saved_offset - layoutManager.getAppBarVerticalOffset()) > touchSlop) {
                     scroll_vertical = true;
                 }
@@ -103,9 +103,21 @@ public class CardRecyclerView extends RecyclerView {
         return super.dispatchTouchEvent(event);
     }
 
+    /**
+     * bug fix
+     * https://stackoverflow.com/questions/46452465/android-the-item-inside-recyclerview-cant-be-clicked-after-scroll
+     **/
     @Override
     public boolean onInterceptTouchEvent(MotionEvent e) {
         switch (e.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                //Fix bug about scroll to top or bottom state cannot reset to idle.
+                if (getScrollState() != SCROLL_STATE_IDLE && atMostVertical()) {
+                    // stop scroll to enable child view to get the touch event
+                    stopScroll();
+                    return false;
+                }
+                break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_MOVE:
                 if (sliding_horizontal_cards) {
@@ -172,6 +184,10 @@ public class CardRecyclerView extends RecyclerView {
             velocityTracker = VelocityTracker.obtain();
         }
         velocityTracker.addMovement(event);
+    }
+
+    public boolean atMostVertical() {
+        return !canScrollVertically(1) || !canScrollVertically(-1);
     }
 
 }
