@@ -12,6 +12,7 @@ import android.view.VelocityTracker;
 import android.view.ViewConfiguration;
 
 import com.james602152002.multiaxiscardlayoutmanager.MultiAxisCardLayoutManager;
+import com.james602152002.multiaxiscardlayoutmanager.interfaces.ScrollAnimatorObserver;
 
 /**
  * Created by shiki60215 on 18-3-6.
@@ -190,4 +191,7 @@ public class CardRecyclerView extends RecyclerView {
         return !canScrollVertically(1) || !canScrollVertically(-1);
     }
 
+    public void smoothScrollToPosition(int position, ScrollAnimatorObserver observer) {
+        layoutManager.smoothScrollToPosition(position, observer);
+    }
 }

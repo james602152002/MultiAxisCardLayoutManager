@@ -1,5 +1,7 @@
 package com.james602152002.multiaxiscardlayoutmanager;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.james602152002.multiaxiscardlayoutmanager.adapter.MultiAxisCardAdapter;
+import com.james602152002.multiaxiscardlayoutmanager.interfaces.ScrollAnimatorObserver;
 import com.james602152002.multiaxiscardlayoutmanager.ui.CardRecyclerView;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.BaseCardViewHolder;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.HorizontalCardViewHolder;
@@ -24,7 +27,7 @@ import java.lang.reflect.Field;
 
 public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 
-    private final boolean DEBUG = false;
+    private final boolean DEBUG = true;
     private int mVerticalOffset;
     private int mFirstVisiPos;
     private int mLastVisiPos;
@@ -53,6 +56,9 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     public final short DIRECTION_RIGHT = 1;
     public final short DIRECTION_ORIGIN = 0;
     private short direction = DIRECTION_ORIGIN;
+    private ObjectAnimator scrollAnimator;
+    public final short SCROLL_ANIM_DURATION = 500;
+    private int scroll_dest_y;
 
     public MultiAxisCardLayoutManager(@NonNull CardRecyclerView recyclerView) {
         mItemRects = new SparseArray<>();
@@ -634,5 +640,85 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     private void log(String content) {
         if (DEBUG)
             Log.i("", "" + content);
+    }
+
+    @Override
+    public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
+        if (mItemRects.size() > position) {
+            if (scrollAnimator == null) {
+                scrollAnimator = ObjectAnimator.ofFloat(this, "animateScroll", 0, 1);
+            } else {
+                scrollAnimator.cancel();
+                scrollAnimator = ObjectAnimator.ofFloat(this, "animateScroll", 0, 1);
+            }
+            scrollAnimator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    scrollAnimator.removeAllListeners();
+                    scrollAnimator = null;
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+            scroll_dest_y = mItemRects.get(position).top;
+            scrollAnimator.setDuration(SCROLL_ANIM_DURATION);
+            scrollAnimator.start();
+        }
+    }
+
+    public void smoothScrollToPosition(int position, final ScrollAnimatorObserver observer) {
+        if (mItemRects.size() > position) {
+            if (scrollAnimator == null) {
+                scrollAnimator = ObjectAnimator.ofFloat(this, "animateScroll", 0, 1);
+            } else {
+                scrollAnimator.cancel();
+                scrollAnimator = ObjectAnimator.ofFloat(this, "animateScroll", 0, 1);
+            }
+            scrollAnimator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    scrollAnimator.removeAllListeners();
+                    scrollAnimator = null;
+                    if (observer != null)
+                        observer.end();
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+            scroll_dest_y = mItemRects.get(position).top;
+            scrollAnimator.setDuration(SCROLL_ANIM_DURATION);
+            scrollAnimator.start();
+        }
+    }
+
+    private void setAnimateScroll(float ratio) {
+        final int dy = (int) ((scroll_dest_y - mVerticalOffset) * ratio);
+        scrollVerticallyBy(dy, recycler, null);
     }
 }
