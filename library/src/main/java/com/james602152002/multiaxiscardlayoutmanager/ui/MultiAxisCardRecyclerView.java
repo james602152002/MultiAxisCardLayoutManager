@@ -18,7 +18,7 @@ import com.james602152002.multiaxiscardlayoutmanager.interfaces.ScrollAnimatorOb
  * Created by shiki60215 on 18-3-6.
  */
 
-public class CardRecyclerView extends RecyclerView {
+public class MultiAxisCardRecyclerView extends RecyclerView {
 
     private float downX, downY, moveX, appbar_saved_offset;
     private boolean touching_horizontal_cards = false;
@@ -30,19 +30,19 @@ public class CardRecyclerView extends RecyclerView {
     private ObjectAnimator horizontal_scroll_animator;
     private VelocityTracker velocityTracker;
 
-    public CardRecyclerView(Context context) {
+    public MultiAxisCardRecyclerView(Context context) {
         super(context);
         touchSlop = (short) ViewConfiguration.get(context).getScaledTouchSlop();
         init();
     }
 
-    public CardRecyclerView(Context context, @Nullable AttributeSet attrs) {
+    public MultiAxisCardRecyclerView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         touchSlop = (short) ViewConfiguration.get(context).getScaledTouchSlop();
         init();
     }
 
-    public CardRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
+    public MultiAxisCardRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         touchSlop = (short) ViewConfiguration.get(context).getScaledTouchSlop();
         init();
@@ -116,7 +116,7 @@ public class CardRecyclerView extends RecyclerView {
                 if (getScrollState() != SCROLL_STATE_IDLE && atMostVertical()) {
                     // stop scroll to enable child view to get the touch event
                     stopScroll();
-                    return false;
+//                    return false;
                 }
                 break;
             case MotionEvent.ACTION_UP:

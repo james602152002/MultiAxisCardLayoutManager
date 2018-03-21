@@ -15,7 +15,7 @@ import android.view.ViewGroup;
 
 import com.james602152002.multiaxiscardlayoutmanager.adapter.MultiAxisCardAdapter;
 import com.james602152002.multiaxiscardlayoutmanager.interfaces.ScrollAnimatorObserver;
-import com.james602152002.multiaxiscardlayoutmanager.ui.CardRecyclerView;
+import com.james602152002.multiaxiscardlayoutmanager.ui.MultiAxisCardRecyclerView;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.BaseCardViewHolder;
 import com.james602152002.multiaxiscardlayoutmanager.viewholder.HorizontalCardViewHolder;
 
@@ -36,7 +36,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     private SparseArray<Rect> horizontalCardItemRects;
     private SparseArray<View> horizontalCards;
 
-    private final CardRecyclerView recyclerView;
+    private final MultiAxisCardRecyclerView recyclerView;
     private AppBarLayout appBarLayout;
     private int appBarVerticalOffset;
     private int appBarTotalScrollRange;
@@ -60,7 +60,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
     public final short SCROLL_ANIM_DURATION = 500;
     private int scroll_dest_y;
 
-    public MultiAxisCardLayoutManager(@NonNull CardRecyclerView recyclerView) {
+    public MultiAxisCardLayoutManager(@NonNull MultiAxisCardRecyclerView recyclerView) {
         mItemRects = new SparseArray<>();
         horizontalCardItemRects = new SparseArray<>();
         horizontalCards = new SparseArray<>();
@@ -84,7 +84,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
             findAppBarLayout(parent);
         if (appBarLayout != null) {
             try {
-                Field field = CardRecyclerView.class.getSuperclass().getDeclaredField("mRecycler");
+                Field field = MultiAxisCardRecyclerView.class.getSuperclass().getDeclaredField("mRecycler");
                 field.setAccessible(true);
                 recycler = (RecyclerView.Recycler) field.get(recyclerView);
             } catch (Exception e) {

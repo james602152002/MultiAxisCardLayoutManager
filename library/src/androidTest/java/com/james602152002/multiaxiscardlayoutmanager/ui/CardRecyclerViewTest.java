@@ -11,12 +11,12 @@ import org.junit.Before;
 
 public class CardRecyclerViewTest extends TestCase{
 
-    public CardRecyclerView recyclerView;
+    public MultiAxisCardRecyclerView recyclerView;
 
     @Before
     public void setUp() throws Exception {
         final Context mContext = InstrumentationRegistry.getTargetContext();
-        recyclerView = new CardRecyclerView(mContext);
+        recyclerView = new MultiAxisCardRecyclerView(mContext);
     }
 
     @After
