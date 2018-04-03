@@ -26,5 +26,6 @@ public class MultiAxisCardRecyclerViewTest extends AndroidTestCase {
 
     @After
     public void tearDown() throws Exception {
+        recyclerView = null;
     }
 }
