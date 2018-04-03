@@ -3,6 +3,8 @@ package com.james602152002.multiaxiscardlayoutmanager;
 import android.content.Context;
 import android.test.AndroidTestCase;
 
+import com.james602152002.multiaxiscardlayoutmanager.ui.MultiAxisCardRecyclerView;
+
 import org.junit.After;
 import org.junit.Before;
 
@@ -16,9 +18,8 @@ public class MultiAxisCardLayoutManagerTest extends AndroidTestCase {
     @Before
     public void setUp() throws Exception {
         final Context context = getContext();
-//        manager = new MultiAxisCardLayoutManager(context, null, 0, 0);
-//        manager = new MultiAxisCardLayoutManager(context, LinearLayoutManager.VERTICAL, true);
-//        manager = new MultiAxisCardLayoutManager(context);
+        MultiAxisCardRecyclerView recyclerView = new MultiAxisCardRecyclerView(context);
+        manager = new MultiAxisCardLayoutManager(recyclerView);
     }
 
     @After

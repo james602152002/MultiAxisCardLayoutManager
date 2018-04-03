@@ -69,6 +69,7 @@ public class MultiAxisCardRecyclerView extends RecyclerView {
                 appbar_saved_offset = layoutManager.getAppBarVerticalOffset();
                 touching_horizontal_cards = layoutManager.isTouchingHorizontalCard(downX, downY);
                 initVelocityTracker(event);
+                ViewCompat.setNestedScrollingEnabled(this, false);
                 break;
             case MotionEvent.ACTION_MOVE:
                 //if fling break the logic
@@ -77,6 +78,7 @@ public class MultiAxisCardRecyclerView extends RecyclerView {
                 }
                 if (!sliding_horizontal_cards && Math.abs(event.getY() - downY + appbar_saved_offset - layoutManager.getAppBarVerticalOffset()) > touchSlop) {
                     scroll_vertical = true;
+                    ViewCompat.setNestedScrollingEnabled(this, true);
                 }
                 if (touching_horizontal_cards && !sliding_horizontal_cards && !scroll_vertical && Math.abs(event.getX() - downX) > touchSlop) {
                     sliding_horizontal_cards = true;
@@ -84,14 +86,12 @@ public class MultiAxisCardRecyclerView extends RecyclerView {
                 if (sliding_horizontal_cards) {
                     layoutManager.scrollHorizontalBy((int) (moveX - event.getX()));
                     moveX = event.getX();
-                    ViewCompat.setNestedScrollingEnabled(this, false);
                 }
                 velocityTracker.addMovement(event);
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 touching_horizontal_cards = false;
-                ViewCompat.setNestedScrollingEnabled(this, true);
                 velocityTracker.addMovement(event);
                 velocityTracker.computeCurrentVelocity(1000);
                 final float velocity = velocityTracker.getXVelocity();
