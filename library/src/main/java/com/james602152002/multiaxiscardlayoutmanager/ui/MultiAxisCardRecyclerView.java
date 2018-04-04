@@ -69,21 +69,23 @@ public class MultiAxisCardRecyclerView extends RecyclerView {
                 appbar_saved_offset = layoutManager.getAppBarVerticalOffset();
                 touching_horizontal_cards = layoutManager.isTouchingHorizontalCard(downX, downY);
                 initVelocityTracker(event);
-                ViewCompat.setNestedScrollingEnabled(this, false);
+                ViewCompat.setNestedScrollingEnabled(this, true);
                 break;
             case MotionEvent.ACTION_MOVE:
                 //if fling break the logic
                 if (getScrollState() == SCROLL_STATE_DRAGGING && !atMostVertical()) {
                     break;
                 }
-                if (!sliding_horizontal_cards && Math.abs(event.getY() - downY + appbar_saved_offset - layoutManager.getAppBarVerticalOffset()) > touchSlop) {
+                final float vertical_dx = Math.abs(event.getY() - downY + appbar_saved_offset - layoutManager.getAppBarVerticalOffset());
+                final float horizontal_dx = Math.abs(event.getX() - downX);
+                if (!sliding_horizontal_cards && vertical_dx > touchSlop && vertical_dx > horizontal_dx) {
                     scroll_vertical = true;
-                    ViewCompat.setNestedScrollingEnabled(this, true);
                 }
-                if (touching_horizontal_cards && !sliding_horizontal_cards && !scroll_vertical && Math.abs(event.getX() - downX) > touchSlop) {
+                if (touching_horizontal_cards && !sliding_horizontal_cards && !scroll_vertical && horizontal_dx > touchSlop) {
                     sliding_horizontal_cards = true;
                 }
                 if (sliding_horizontal_cards) {
+                    ViewCompat.setNestedScrollingEnabled(this, false);
                     layoutManager.scrollHorizontalBy((int) (moveX - event.getX()));
                     moveX = event.getX();
                 }

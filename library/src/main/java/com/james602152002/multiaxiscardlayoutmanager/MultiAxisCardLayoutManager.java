@@ -27,7 +27,7 @@ import java.lang.reflect.Field;
 
 public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
 
-    private final boolean DEBUG = true;
+    private final boolean DEBUG = false;
     private int mVerticalOffset;
     private int mFirstVisiPos;
     private int mLastVisiPos;
