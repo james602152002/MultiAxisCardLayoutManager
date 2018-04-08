@@ -306,7 +306,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         }
 
                         leftOffset += lineMaxWidth;
-                        lineMaxWidth = Math.max(lineMaxWidth, getDecoratedMeasurementHorizontal(child));
+                        lineMaxWidth = getDecoratedMeasurementHorizontal(child);
                     } else {
                         lineMaxWidth = 0;
                         topOffset += lineMaxHeight;
