@@ -16,6 +16,6 @@ allprojects {
 
 ```
 dependencies {
-	implementation 'com.github.james602152002:MultiAxisCardRecyclerView:1.0.1'
+	implementation 'com.github.james602152002:MultiAxisCardRecyclerView:1.0.4'
 }
 ```
