@@ -283,10 +283,12 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                 // If you use get lastView it will have bug when datasetchanged. Because of wrong position, you cannot calculate minPosition precisely.
                 //minPos = ((MultiAxisCardAdapter) recyclerView.getAdapter()).getHorizontalCardNextVerticalIndex(getPosition(lastView));
                 else {
-                    minPos = getPosition(lastView) + 1;
+//                    minPos = getPosition(lastView) + 1;
+                    minPos = mFirstVisiPos + getChildCount();
                 }
                 topOffset = getDecoratedTop(lastView);
                 lineMaxHeight = Math.max(lineMaxHeight, getDecoratedMeasurementVertical(lastView));
+//                lineMaxHeight = getDecoratedMeasurementVertical(lastView);
             }
             //add child view in order
             leftOffset = getPaddingLeft() + dx;
@@ -344,7 +346,6 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         horizontalCardItemRects.put(i, rect);
                         horizontalCards.put(i, child);
                     }
-
                     //change child left and lineHeight
                     lineMaxHeight = Math.max(lineMaxHeight, rect.bottom - rect.top);
                     layoutDecoratedWithMargins(child, rect.left, rect.top - mVerticalOffset, rect.right, rect.bottom - mVerticalOffset);
