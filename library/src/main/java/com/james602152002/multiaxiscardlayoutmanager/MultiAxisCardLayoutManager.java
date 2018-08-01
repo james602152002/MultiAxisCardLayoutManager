@@ -188,6 +188,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
                         if (defaultAdapterDataObserver != null)
                             defaultAdapterDataObserver.onItemRangeRemoved(positionStart, itemCount);
+                        mAdapter.reset();
                         log("4");
                     }
 
