@@ -212,6 +212,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                             removeAndRecycleAllViews(recycler);
                             recycler.clear();
                         }
+                        removeAllViews();
                         //reset
                         mVerticalOffset = 0;
                         mFirstVisiPos = 0;
