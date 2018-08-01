@@ -209,7 +209,7 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         log("6");
                         if (recycler != null) {
 //                            detachAndScrapAttachedViews(recycler);
-                            removeAndRecycleAllViews(recycler);
+//                            removeAndRecycleAllViews(recycler);
 //                            recycler.clear();
                         }
                         //reset
