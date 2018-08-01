@@ -189,6 +189,12 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                         if (defaultAdapterDataObserver != null)
                             defaultAdapterDataObserver.onItemRangeRemoved(positionStart, itemCount);
                         log("4");
+                        if (recycler != null) {
+                            for (int i = positionStart; i < positionStart + itemCount; i++) {
+                                removeAndRecycleView(recycler.getViewForPosition(i), recycler);
+                            }
+
+                        }
                         app_bar_offset_init = false;
                     }
 

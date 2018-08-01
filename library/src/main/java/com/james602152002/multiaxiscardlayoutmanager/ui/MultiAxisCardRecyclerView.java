@@ -48,7 +48,7 @@ public class MultiAxisCardRecyclerView extends RecyclerView {
         init();
     }
 
-    private void init() {
+    public void init() {
         layoutManager = new MultiAxisCardLayoutManager(this);
         setLayoutManager(layoutManager);
     }
