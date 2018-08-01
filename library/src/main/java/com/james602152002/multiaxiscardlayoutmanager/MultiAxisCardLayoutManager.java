@@ -203,25 +203,25 @@ public class MultiAxisCardLayoutManager extends RecyclerView.LayoutManager {
                     @Override
                     public void onChanged() {
                         super.onChanged();
-                        RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
-                        if (defaultAdapterDataObserver != null)
-                            defaultAdapterDataObserver.onChanged();
-                        log("6");
-                        if (recycler != null) {
-//                            detachAndScrapAttachedViews(recycler);
+//                        RecyclerView.AdapterDataObserver defaultAdapterDataObserver = mAdapter.getCustomizeAdapterDataObserver();
+//                        if (defaultAdapterDataObserver != null)
+//                            defaultAdapterDataObserver.onChanged();
+//                        log("6");
+//                        if (recycler != null) {
+////                            detachAndScrapAttachedViews(recycler);
 //                            removeAndRecycleAllViews(recycler);
-//                            recycler.clear();
-                        }
-                        //reset
-                        mVerticalOffset = 0;
-                        mFirstVisiPos = 0;
-//                        mLastVisiPos = 0;
-                        mLastVisiPos = getItemCount();
-
-                        mItemRects.clear();
-                        horizontalCardItemRects.clear();
-                        horizontalCards.clear();
-                        mAdapter.reset();
+////                            recycler.clear();
+//                        }
+//                        //reset
+//                        mVerticalOffset = 0;
+//                        mFirstVisiPos = 0;
+////                        mLastVisiPos = 0;
+//                        mLastVisiPos = getItemCount();
+//
+//                        mItemRects.clear();
+//                        horizontalCardItemRects.clear();
+//                        horizontalCards.clear();
+//                        mAdapter.reset();
                     }
                 });
         }
